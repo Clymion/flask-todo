@@ -1,0 +1,27 @@
+exclude = [
+    ".venv",
+    "venv",
+    "__pycache__",
+    ".git",
+]
+
+line-length = 100
+indent-width = 4
+
+[lint]
+select = [
+    "ALL"
+]
+ignore = []
+fixable = ["ALL"]
+
+
+[format]
+quote-style = "double"
+
+[lint.mccabe]
+# if,forなどの複雑性をどれくらい許容するか。if,for文が11以上あると警告
+# C901
+max-complexity = 10
+
+# tests配下は、部分的にルールを無効化: ex. マジックナンバー、assert
