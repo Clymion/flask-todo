@@ -1,6 +1,6 @@
 {    
     // エディタ共通設定
-    "editor.renderWhitespace": "all", // スペースの可視化
+    "editor.renderWhitespace": "boundary", // スペースの可視化
     "editor.tabSize": 4,
     "files.eol": "\n",
 
@@ -27,4 +27,9 @@
             "source.organizeImports.ruff": "always"
         }
     },
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
 }

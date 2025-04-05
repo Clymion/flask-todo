@@ -7,7 +7,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # llコマンドのエイリアスを追加
-RUN echo "alias ll='ls -la'" >> ~/.bashrc
+RUN echo "alias ll='ls -la'\n" >> ~/.bashrc
 
 WORKDIR /workspaces
 
@@ -22,4 +22,4 @@ COPY . .
 EXPOSE 5000
 
 # 開発サーバー起動コマンド
-CMD ["flask", "run", "--host=0.0.0.0"]
+CMD ["flask", "--app", "api", "run", "--host=0.0.0.0"]
