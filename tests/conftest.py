@@ -144,7 +144,7 @@ class TestClient:
     def create_todo(self, todo_data):
         """新規ToDoを作成"""
         return self.client.post(
-            f"{self.base_url}/todos",
+            f"{self.base_url}/todos/",
             data=json.dumps(todo_data),
             content_type="application/json",
         )

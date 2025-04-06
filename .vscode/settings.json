@@ -10,7 +10,7 @@
     "python.analysis.inlayHints.variableTypes": true,
 
     // Pylanceのエラー・警告表示を無効化
-    "python.analysis.ignore": ["app", "tests"],
+    "python.analysis.ignore": ["api", "tests", "scripts"],
 
     // Ruffの設定
     "ruff.lint.enable": true,

@@ -5,7 +5,7 @@ API全体で一貫したエラーレスポンスを返すための関数群
 
 import json
 from sqlite3 import Error as SQLiteError
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple
 
 from flask import Response, jsonify, request
 from werkzeug.exceptions import HTTPException
@@ -23,11 +23,12 @@ def error_response(
     Args:
         code: HTTPステータスコード
         message: エラーメッセージ
-        details: 追加のエラー詳細情報（オプション）
-        error_type: エラータイプの識別子（オプション）
+        details: 追加のエラー詳細情報 (オプション)
+        error_type: エラータイプの識別子 (オプション)
 
     Returns:
         標準化されたJSONレスポンスとステータスコード
+
     """
     response_data = {"code": code, "message": message}
 
@@ -49,6 +50,7 @@ def validation_error(errors: Dict[str, str]) -> Tuple[Response, int]:
 
     Returns:
         標準化されたバリデーションエラーレスポンス
+
     """
     return error_response(400, "バリデーションエラー", errors)
 
@@ -59,6 +61,7 @@ def register_error_handlers(app):
 
     Args:
         app: Flaskアプリケーションインスタンス
+
     """
 
     @app.errorhandler(400)
@@ -84,12 +87,14 @@ def register_error_handlers(app):
     @app.errorhandler(SQLiteError)
     def handle_sqlite_error(e):
         return error_response(
-            500, "データベースエラーが発生しました", error_type=e.__class__.__name__
+            500,
+            "データベースエラーが発生しました",
+            error_type=e.__class__.__name__,
         )
 
     @app.errorhandler(json.JSONDecodeError)
     def handle_json_error(e):
-        return error_response(400, f"JSONデコードエラー: {str(e)}")
+        return error_response(400, f"JSONデコードエラー: {e!s}")
 
     @app.errorhandler(HTTPException)
     def handle_http_exception(e):

@@ -31,7 +31,8 @@
 				"rangav.vscode-thunder-client",
 				"Gruntfuggly.todo-tree",
 				"ms-python.black-formatter",
-				"ms-python.isort"
+				"ms-python.isort",
+				"charliermarsh.ruff"
 			]
 		}
 	}

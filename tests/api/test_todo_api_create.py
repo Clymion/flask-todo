@@ -2,16 +2,18 @@
 POST /todos エンドポイントのテスト
 """
 
-import pytest
-from flask import json
 from datetime import datetime
+
+from flask import json
+
+from tests.conftest import TestClient
 
 
 class TestCreateTodo:
     """ToDo作成エンドポイントのテストクラス"""
 
-    def test_create_todo_with_required_fields_only(self, test_client):
-        """必須フィールド（title）のみで新規ToDoが作成できることを確認"""
+    def test_create_todo_with_required_fields_only(self, test_client: TestClient):
+        """必須フィールド (title)のみで新規ToDoが作成できることを確認"""
         todo_data = {"title": "タイトルのみのタスク"}
 
         response = test_client.create_todo(todo_data)
@@ -42,7 +44,7 @@ class TestCreateTodo:
         assert "created_at" in data
         assert "updated_at" in data
 
-    def test_id_is_auto_assigned(self, test_client, todo_data):
+    def test_id_is_auto_assigned(self, test_client: TestClient, todo_data):
         """idが自動的に採番されることを確認"""
         # idフィールドを含める
         todo_with_id = todo_data.copy()
@@ -55,7 +57,7 @@ class TestCreateTodo:
         # 指定したIDでなく自動採番されたIDであること
         assert data["id"] != todo_with_id["id"]
 
-    def test_created_and_updated_at_are_set(self, test_client, todo_data):
+    def test_created_and_updated_at_are_set(self, test_client: TestClient, todo_data):
         """created_atとupdated_atが自動設定されることを確認"""
         response = test_client.create_todo(todo_data)
         assert response.status_code == 201
@@ -68,7 +70,7 @@ class TestCreateTodo:
         created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
         updated_at = datetime.fromisoformat(data["updated_at"].replace("Z", "+00:00"))
 
-        # created_atとupdated_atは一致するはず（作成直後）
+        # created_atとupdated_atは一致するはず (作成直後)
         assert created_at == updated_at
 
     def test_missing_title(self, test_client):
@@ -156,8 +158,8 @@ class TestCreateTodo:
         # assert 'errors' in data
         # assert 'due_date' in data['errors']
 
-    def test_duplicate_title(self, test_client, todo_data):
-        """同一タイトルのToDoが既存の場合に409エラーが返されることを確認"""
+    def test_duplicate_title(self, test_client: TestClient, todo_data):
+        """同一タイトルのToDoが既存のデータと重複する場合に409エラーが返されることを確認"""
         # 最初のToDoを作成
         response = test_client.create_todo(todo_data)
         assert response.status_code == 201
@@ -166,9 +168,9 @@ class TestCreateTodo:
         response = test_client.create_todo(todo_data)
         assert response.status_code == 409
 
-        # data = json.loads(response.data)
-        # assert data['code'] == 409
-        # assert 'message' in data
+        data = json.loads(response.data)
+        assert data['code'] == 409
+        assert 'message' in data
 
     def test_boundary_title_length(self, test_client):
         """ちょうど100文字のタイトルで正常に作成できることを確認"""
