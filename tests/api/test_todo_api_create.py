@@ -80,11 +80,11 @@ class TestCreateTodo:
         response = test_client.create_todo(todo_data)
         assert response.status_code == 400
 
-        # data = json.loads(response.data)
-        # assert 'code' in data
-        # assert 'message' in data
-        # assert 'errors' in data
-        # assert 'title' in data['errors']
+        data = json.loads(response.data)
+        assert 'code' in data
+        assert 'message' in data
+        assert 'errors' in data
+        assert 'title' in data['errors']
 
     def test_empty_title(self, test_client):
         """空のタイトルでエラーが返されることを確認"""
@@ -93,9 +93,9 @@ class TestCreateTodo:
         response = test_client.create_todo(todo_data)
         assert response.status_code == 400
 
-        # data = json.loads(response.data)
-        # assert 'errors' in data
-        # assert 'title' in data['errors']
+        data = json.loads(response.data)
+        assert 'errors' in data
+        assert 'title' in data['errors']
 
     def test_title_too_long(self, test_client):
         """タイトルが長すぎる場合にエラーが返されることを確認"""
@@ -104,9 +104,9 @@ class TestCreateTodo:
         response = test_client.create_todo(todo_data)
         assert response.status_code == 400
 
-        # data = json.loads(response.data)
-        # assert 'errors' in data
-        # assert 'title' in data['errors']
+        data = json.loads(response.data)
+        assert 'errors' in data
+        assert 'title' in data['errors']
 
     def test_description_too_long(self, test_client):
         """説明が長すぎる場合にエラーが返されることを確認"""
@@ -118,9 +118,9 @@ class TestCreateTodo:
         response = test_client.create_todo(todo_data)
         assert response.status_code == 400
 
-        # data = json.loads(response.data)
-        # assert 'errors' in data
-        # assert 'description' in data['errors']
+        data = json.loads(response.data)
+        assert 'errors' in data
+        assert 'description' in data['errors']
 
     def test_invalid_priority(self, test_client):
         """無効な優先度でエラーが返されることを確認"""
@@ -129,9 +129,9 @@ class TestCreateTodo:
         response = test_client.create_todo(todo_data)
         assert response.status_code == 400
 
-        # data = json.loads(response.data)
-        # assert 'errors' in data
-        # assert 'priority' in data['errors']
+        data = json.loads(response.data)
+        assert 'errors' in data
+        assert 'priority' in data['errors']
 
     def test_invalid_status(self, test_client):
         """無効なステータスでエラーが返されることを確認"""
@@ -140,9 +140,9 @@ class TestCreateTodo:
         response = test_client.create_todo(todo_data)
         assert response.status_code == 400
 
-        # data = json.loads(response.data)
-        # assert 'errors' in data
-        # assert 'status' in data['errors']
+        data = json.loads(response.data)
+        assert 'errors' in data
+        assert 'status' in data['errors']
 
     def test_invalid_due_date_format(self, test_client):
         """無効な期限日形式でエラーが返されることを確認"""
@@ -154,9 +154,9 @@ class TestCreateTodo:
         response = test_client.create_todo(todo_data)
         assert response.status_code == 400
 
-        # data = json.loads(response.data)
-        # assert 'errors' in data
-        # assert 'due_date' in data['errors']
+        data = json.loads(response.data)
+        assert 'errors' in data
+        assert 'due_date' in data['errors']
 
     def test_duplicate_title(self, test_client: TestClient, todo_data):
         """同一タイトルのToDoが既存のデータと重複する場合に409エラーが返されることを確認"""

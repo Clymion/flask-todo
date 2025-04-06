@@ -1,5 +1,6 @@
 """
 エラーハンドリングに関する共通ユーティリティモジュール
+
 API全体で一貫したエラーレスポンスを返すための関数群
 """
 
@@ -8,6 +9,7 @@ from sqlite3 import Error as SQLiteError
 from typing import Any, Dict, Optional, Tuple
 
 from flask import Response, jsonify, request
+from marshmallow import ValidationError
 from werkzeug.exceptions import HTTPException
 
 
@@ -95,6 +97,11 @@ def register_error_handlers(app):
     @app.errorhandler(json.JSONDecodeError)
     def handle_json_error(e):
         return error_response(400, f"JSONデコードエラー: {e!s}")
+
+    @app.errorhandler(ValidationError)
+    def handle_validation_error(e):
+        # marshmallowのValidationErrorはmessagesプロパティにエラー情報を持っている
+        return validation_error(e.messages)
 
     @app.errorhandler(HTTPException)
     def handle_http_exception(e):

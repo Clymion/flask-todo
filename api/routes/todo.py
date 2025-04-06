@@ -9,8 +9,7 @@ from typing import Literal
 
 from flask import Blueprint, Response, jsonify, request
 
-from api.models.todo import Todo
-from api.schemas.todo import TodoSchema
+from api.schemas.todo import TodoQuerySchema, TodoSchema
 from api.services.todo import TodoService
 
 todo_bp = Blueprint("todos", __name__)
@@ -26,12 +25,24 @@ def get() -> Response:
     priority = request.args.get("priority")
     due_before = request.args.get("due_before")
     due_after = request.args.get("due_after")
+
+    # クエリパラメータのバリデーション
+    todo_query_schema = TodoQuerySchema()
+    validated_params = todo_query_schema.load(
+        {
+            "status": status,
+            "priority": priority,
+            "due_before": due_before,
+            "due_after": due_after,
+        },
+    )
+
     # ToDoServiceを使用してデータを取得
     todos = TodoService.get_all_todos(
-        status=status,
-        priority=priority,
-        due_before=due_before,
-        due_after=due_after,
+        status=validated_params.get("status"),
+        priority=validated_params.get("priority"),
+        due_before=validated_params.get("due_before"),
+        due_after=validated_params.get("due_after"),
     )
     # スキーマを使用してデータをシリアライズ
     todo_schema = TodoSchema(many=True)

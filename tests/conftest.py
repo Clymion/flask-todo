@@ -9,9 +9,10 @@ from datetime import datetime, timedelta
 import pytest
 from flask import Flask, json
 from flask.testing import FlaskClient
+from werkzeug.test import TestResponse
 
-# APIの実装をインポートする予定のためのプレースホルダー
 from api import create_app
+from api.models.todo import Todo
 from api.utils.database import db
 
 
@@ -108,17 +109,20 @@ def setup_sample_todos(app: Flask, sample_todos):
     """
     with app.app_context():
         # 将来の実装のためのプレースホルダー
-        # for todo_data in sample_todos:
-        #     todo = Todo(
-        #         title=todo_data['title'],
-        #         description=todo_data['description'],
-        #         due_date=datetime.strptime(todo_data['due_date'], '%Y-%m-%d').date() if todo_data.get('due_date') else None,
-        #         priority=todo_data['priority'],
-        #         status=todo_data['status']
-        #     )
-        #     db.session.add(todo)
-        # db.session.commit()
-        pass
+        for todo_data in sample_todos:
+            todo = Todo(
+                title=todo_data["title"],
+                description=todo_data["description"],
+                due_date=(
+                    datetime.strptime(todo_data["due_date"], "%Y-%m-%d").date()
+                    if todo_data.get("due_date")
+                    else None
+                ),
+                priority=todo_data["priority"],
+                status=todo_data["status"],
+            )
+            db.session.add(todo)
+        db.session.commit()
 
     return sample_todos
 
@@ -126,14 +130,16 @@ def setup_sample_todos(app: Flask, sample_todos):
 class TestClient:
     """
     テスト用のHTTPクライアントユーティリティクラス
+
     APIリクエストを簡単に行うためのヘルパーメソッドを提供
     """
 
-    def __init__(self, client: FlaskClient):
+    def __init__(self, client: FlaskClient) -> None:
+        """コンストラクタ"""
         self.client = client
         self.base_url = "/api/v1"
 
-    def get_todos(self, query_params=None):
+    def get_todos(self, query_params: dict[str, str] | None = None) -> TestResponse:
         """全ToDoリストを取得"""
         url = f"{self.base_url}/todos/"
         if query_params:
@@ -141,7 +147,7 @@ class TestClient:
             url = f"{url}?{query_string}"
         return self.client.get(url)
 
-    def create_todo(self, todo_data):
+    def create_todo(self, todo_data: dict) -> TestResponse:
         """新規ToDoを作成"""
         return self.client.post(
             f"{self.base_url}/todos/",
@@ -149,11 +155,11 @@ class TestClient:
             content_type="application/json",
         )
 
-    def get_todo_by_id(self, todo_id):
+    def get_todo_by_id(self, todo_id: int) -> TestResponse:
         """IDによるToDo取得"""
         return self.client.get(f"{self.base_url}/todos/{todo_id}")
 
-    def update_todo(self, todo_id, update_data):
+    def update_todo(self, todo_id: int, update_data: dict) -> TestResponse:
         """ToDoを更新"""
         return self.client.put(
             f"{self.base_url}/todos/{todo_id}",
@@ -161,28 +167,28 @@ class TestClient:
             content_type="application/json",
         )
 
-    def delete_todo(self, todo_id):
+    def delete_todo(self, todo_id: int) -> TestResponse:
         """ToDoを削除"""
         return self.client.delete(f"{self.base_url}/todos/{todo_id}")
 
 
 @pytest.fixture
-def test_client(client):
+def test_client(client) -> TestClient:
     """拡張したテストクライアントを提供するフィクスチャ"""
     return TestClient(client)
 
 
 # 日付関連のユーティリティ関数
-def today_str():
+def today_str() -> str:
     """今日の日付を文字列で返す"""
     return datetime.now().strftime("%Y-%m-%d")
 
 
-def tomorrow_str():
+def tomorrow_str() -> str:
     """明日の日付を文字列で返す"""
     return (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
 
 
-def yesterday_str():
+def yesterday_str() -> str:
     """昨日の日付を文字列で返す"""
     return (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")

@@ -108,6 +108,7 @@ class TodoQuerySchema(Schema):
             error="ステータスは次のいずれかである必要があります: not_started, in_progress, completed",
         ),
         required=False,
+        allow_none=True,
     )
     priority = fields.String(
         validate=validate.OneOf(
@@ -115,9 +116,10 @@ class TodoQuerySchema(Schema):
             error="優先度は次のいずれかである必要があります: low, medium, high",
         ),
         required=False,
+        allow_none=True,
     )
-    due_before = fields.Date(format="%Y-%m-%d", required=False)
-    due_after = fields.Date(format="%Y-%m-%d", required=False)
+    due_before = fields.Date(format="%Y-%m-%d", required=False, allow_none=True)
+    due_after = fields.Date(format="%Y-%m-%d", required=False, allow_none=True)
 
     @validates("due_before")
     def validate_due_before(self, value: str) -> None:
