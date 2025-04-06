@@ -66,19 +66,13 @@ class TodoService:
 
         Raises:
             NotFound: 指定されたIDのToDoが存在しない場合
+
         """
-        # 実際の実装
-        # todo = Todo.query.get(todo_id)
-        # if not todo:
-        #     raise NotFound(f"ID {todo_id}のToDoは見つかりません")
-        # return todo
-
-        # 一時的なインメモリ実装
-        for todo in _todos_db:
-            if todo["id"] == todo_id:
-                return todo
-
-        raise NotFound(f"ID {todo_id}のToDoは見つかりません")
+        todo = Todo.query.get(todo_id)
+        if not todo:
+            msg = f"ID {todo_id}のToDoは見つかりません"
+            raise NotFound(msg)
+        return todo
 
     @staticmethod
     def create_todo(todo_data: Dict[str, Any]) -> Dict[str, Any]:

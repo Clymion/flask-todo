@@ -81,3 +81,20 @@ def create() -> tuple[Response, Literal[201]]:
     todo_data = todo_schema.dump(todo)
     # レスポンスを返す
     return jsonify(todo_data), 201
+
+
+@todo_bp.route("/<todo_id>", methods=["GET"])
+def get_by_id(todo_id: int) -> Response:
+    """
+    IDによってToDoアイテムを取得するエンドポイント
+    """
+    # IDのバリデーション
+    query_schema = TodoQuerySchema()
+    validated_params = query_schema.load({"id": todo_id})
+    # ToDoServiceを使用してデータを取得
+    todo = TodoService.get_todo_by_id(validated_params.get("id"))
+    # スキーマを使用してデータをシリアライズ
+    todo_schema = TodoSchema()
+    todo_data = todo_schema.dump(todo)
+    # レスポンスを返す
+    return jsonify(todo_data)

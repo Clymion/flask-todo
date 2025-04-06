@@ -102,6 +102,14 @@ class TodoUpdateSchema(TodoSchema):
 class TodoQuerySchema(Schema):
     """ToDo一覧取得のクエリパラメータ用スキーマ"""
 
+    id = fields.Integer(
+        validate=validate.Range(
+            min=1,
+            error="IDは1以上の整数である必要があります",
+        ),
+        required=False,
+        allow_none=True,
+    )
     status = fields.String(
         validate=validate.OneOf(
             ["not_started", "in_progress", "completed"],
