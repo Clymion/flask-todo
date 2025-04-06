@@ -73,7 +73,7 @@ class TestCreateTodo:
         # created_atとupdated_atは一致するはず (作成直後)
         assert created_at == updated_at
 
-    def test_missing_title(self, test_client):
+    def test_missing_title(self, test_client: TestClient):
         """タイトルが欠落している場合にエラーが返されることを確認"""
         todo_data = {"description": "タイトルなしのタスク", "priority": "high"}
 
@@ -86,7 +86,7 @@ class TestCreateTodo:
         assert 'errors' in data
         assert 'title' in data['errors']
 
-    def test_empty_title(self, test_client):
+    def test_empty_title(self, test_client: TestClient):
         """空のタイトルでエラーが返されることを確認"""
         todo_data = {"title": "", "description": "空のタイトル"}
 
@@ -97,7 +97,7 @@ class TestCreateTodo:
         assert 'errors' in data
         assert 'title' in data['errors']
 
-    def test_title_too_long(self, test_client):
+    def test_title_too_long(self, test_client: TestClient):
         """タイトルが長すぎる場合にエラーが返されることを確認"""
         todo_data = {"title": "a" * 101, "description": "タイトルが長すぎる"}  # 101文字
 
@@ -108,7 +108,7 @@ class TestCreateTodo:
         assert 'errors' in data
         assert 'title' in data['errors']
 
-    def test_description_too_long(self, test_client):
+    def test_description_too_long(self, test_client: TestClient):
         """説明が長すぎる場合にエラーが返されることを確認"""
         todo_data = {
             "title": "説明が長すぎるタスク",
@@ -122,7 +122,7 @@ class TestCreateTodo:
         assert 'errors' in data
         assert 'description' in data['errors']
 
-    def test_invalid_priority(self, test_client):
+    def test_invalid_priority(self, test_client: TestClient):
         """無効な優先度でエラーが返されることを確認"""
         todo_data = {"title": "無効な優先度のタスク", "priority": "invalid_priority"}
 
@@ -133,7 +133,7 @@ class TestCreateTodo:
         assert 'errors' in data
         assert 'priority' in data['errors']
 
-    def test_invalid_status(self, test_client):
+    def test_invalid_status(self, test_client: TestClient):
         """無効なステータスでエラーが返されることを確認"""
         todo_data = {"title": "無効なステータスのタスク", "status": "invalid_status"}
 
@@ -144,7 +144,7 @@ class TestCreateTodo:
         assert 'errors' in data
         assert 'status' in data['errors']
 
-    def test_invalid_due_date_format(self, test_client):
+    def test_invalid_due_date_format(self, test_client: TestClient):
         """無効な期限日形式でエラーが返されることを確認"""
         todo_data = {
             "title": "無効な期限日のタスク",

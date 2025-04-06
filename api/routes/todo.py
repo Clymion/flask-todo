@@ -82,10 +82,6 @@ def create() -> tuple[Response, Literal[201]]:
 
     # スキーマを使用してデータをバリデーション
     todo_schema = TodoSchema()
-    errors = todo_schema.validate(data)
-    if errors:
-        # バリデーションエラーがある場合は400エラーを返す
-        return jsonify(errors), 400
 
     todo_data = todo_schema.load(data)
     # ToDoServiceを使用してデータを保存
