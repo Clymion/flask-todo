@@ -4,7 +4,7 @@ ToDo APIのルートを定義するモジュール
 プレフィックスは `/api/v1/todo` として `app.py` で登録されている
 """
 
-import json
+from json import JSONDecodeError
 from typing import Literal
 
 from flask import Blueprint, Response, jsonify, request
@@ -59,22 +59,13 @@ def create() -> tuple[Response, Literal[201]]:
     # JSONデータが存在するか確認
     if not request.is_json:
         msg = "リクエストボディにJSONデータがありません"
-        raise json.JSONDecodeError(msg, "", 0)
+        raise JSONDecodeError(msg, "", 0)
 
     # JSONデータを解析
-    # force=True はリクエストのContent-Typeが application/json でなくても解析を試みる
-    try:
-        # silent=False を指定すると、JSONデコードエラー発生時に例外を投げる
-        data = request.get_json(force=True, silent=False)
-        if data is None:
-            msg = "JSONデータが空です"
-            raise json.JSONDecodeError(msg, "", 0)
-    except Exception as e:
-        # 標準のJSONDecodeErrorではなくても、JSONDecodeErrorに変換して投げる
-        if not isinstance(e, json.JSONDecodeError):
-            msg = f"JSONの解析に失敗しました: {e!s}"
-            raise json.JSONDecodeError(msg, "", 0)
-        raise
+    data = request.get_json(force=True, silent=True)
+    if request.get_data() is not None and data is None:
+        msg = "JSONデータの解析に失敗しました"
+        raise JSONDecodeError(msg, "", 0)
 
     if "id" in data:
         # idフィールドは自動採番されるため、リクエストボディから削除
