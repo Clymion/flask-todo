@@ -5,6 +5,7 @@
 import os
 import tempfile
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import pytest
 from flask import Flask, json
@@ -14,6 +15,8 @@ from werkzeug.test import TestResponse
 from api import create_app
 from api.models.todo import Todo
 from api.utils.database import db
+
+JST = ZoneInfo("Asia/Tokyo")  # 日本標準時 (JST) のタイムゾーン情報を取得
 
 
 @pytest.fixture
@@ -56,7 +59,7 @@ def todo_data():
     return {
         "title": "テストタスク",
         "description": "これはテスト用のタスクです",
-        "due_date": (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d"),
+        "due_date": (datetime.now(tz=JST) + timedelta(days=7)).strftime("%Y-%m-%d"),
         "priority": "medium",
         "status": "not_started",
     }
@@ -70,31 +73,31 @@ def sample_todos():
             "id": 1,
             "title": "重要なタスク",
             "description": "最優先で取り組むべきタスク",
-            "due_date": (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d"),
+            "due_date": (datetime.now(tz=JST) + timedelta(days=1)).strftime("%Y-%m-%d"),
             "priority": "high",
             "status": "not_started",
-            "created_at": datetime.now().isoformat(),
-            "updated_at": datetime.now().isoformat(),
+            "created_at": datetime.fromtimestamp(1743462620.1, tz=JST),
+            "updated_at": datetime.fromtimestamp(1743462620.1, tz=JST),
         },
         {
             "id": 2,
             "title": "進行中のタスク",
             "description": "現在進行中のタスク",
-            "due_date": (datetime.now() + timedelta(days=3)).strftime("%Y-%m-%d"),
+            "due_date": (datetime.now(tz=JST) + timedelta(days=3)).strftime("%Y-%m-%d"),
             "priority": "medium",
             "status": "in_progress",
-            "created_at": datetime.now().isoformat(),
-            "updated_at": datetime.now().isoformat(),
+            "created_at": datetime.fromtimestamp(1743462620.2, tz=JST),
+            "updated_at": datetime.fromtimestamp(1743462620.2, tz=JST),
         },
         {
             "id": 3,
             "title": "完了したタスク",
             "description": "既に完了したタスク",
-            "due_date": (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d"),
+            "due_date": (datetime.now(tz=JST) - timedelta(days=1)).strftime("%Y-%m-%d"),
             "priority": "low",
             "status": "completed",
-            "created_at": datetime.now().isoformat(),
-            "updated_at": datetime.now().isoformat(),
+            "created_at": datetime.fromtimestamp(1743462620.3, tz=JST),
+            "updated_at": datetime.fromtimestamp(1743462620.3, tz=JST),
         },
     ]
 
@@ -120,6 +123,8 @@ def setup_sample_todos(app: Flask, sample_todos):
                 ),
                 priority=todo_data["priority"],
                 status=todo_data["status"],
+                created_at=todo_data["created_at"],
+                updated_at=todo_data["updated_at"],
             )
             db.session.add(todo)
         db.session.commit()
@@ -181,14 +186,14 @@ def test_client(client) -> TestClient:
 # 日付関連のユーティリティ関数
 def today_str() -> str:
     """今日の日付を文字列で返す"""
-    return datetime.now().strftime("%Y-%m-%d")
+    return datetime.now(tz=JST).strftime("%Y-%m-%d")
 
 
 def tomorrow_str() -> str:
     """明日の日付を文字列で返す"""
-    return (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+    return (datetime.now(tz=JST) + timedelta(days=1)).strftime("%Y-%m-%d")
 
 
 def yesterday_str() -> str:
     """昨日の日付を文字列で返す"""
-    return (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+    return (datetime.now(tz=JST) - timedelta(days=1)).strftime("%Y-%m-%d")

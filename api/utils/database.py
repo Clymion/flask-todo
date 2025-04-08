@@ -16,12 +16,13 @@ DB_PATH = os.path.join(BASE_DIR, "data", "app.db")
 db = SQLAlchemy()
 
 
-def init_db(app: Flask):
+def init_db(app: Flask) -> None:
     """
     Flaskアプリケーションにデータベース設定を適用
 
     Args:
         app: Flaskアプリケーションインスタンス
+
     """
     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH}"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False

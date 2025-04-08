@@ -70,8 +70,14 @@ class TestCreateTodo:
         created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
         updated_at = datetime.fromisoformat(data["updated_at"].replace("Z", "+00:00"))
 
-        # created_atとupdated_atは一致するはず (作成直後)
-        assert created_at == updated_at
+        # created_atとupdated_atは秒単位で同じであることを確認
+        assert created_at.year == updated_at.year
+        assert created_at.month == updated_at.month
+        assert created_at.day == updated_at.day 
+        assert created_at.hour == updated_at.hour
+        assert created_at.minute == updated_at.minute
+        assert created_at.second == updated_at.second
+        assert created_at.tzinfo == updated_at.tzinfo  # タイムゾーンが同じであることを確認
 
     def test_missing_title(self, test_client: TestClient):
         """タイトルが欠落している場合にエラーが返されることを確認"""

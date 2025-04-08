@@ -122,54 +122,30 @@ class TodoService:
         Raises:
             NotFound: 指定されたIDのToDoが存在しない場合
             Conflict: 更新後のタイトルが他のToDoと重複する場合
+
         """
-        # 実際の実装
-        # todo = Todo.query.get(todo_id)
-        # if not todo:
-        #     raise NotFound(f"ID {todo_id}のToDoは見つかりません")
-        #
-        # # タイトルが変更され、新しいタイトルが既存のものと重複する場合
-        # if 'title' in update_data and update_data['title'] != todo.title:
-        #     existing = Todo.query.filter(Todo.title == update_data['title'], Todo.id != todo_id).first()
-        #     if existing:
-        #         raise Conflict("同じタイトルのToDoアイテムが既に存在します")
-        #
-        # # 各フィールドを更新
-        # for key, value in update_data.items():
-        #     if hasattr(todo, key):
-        #         setattr(todo, key, value)
-        #
-        # todo.updated_at = datetime.now()
-        # db.session.commit()
-        # return todo
-
-        # 一時的なインメモリ実装
-        todo = None
-        for i, t in enumerate(_todos_db):
-            if t["id"] == todo_id:
-                todo = t
-                todo_index = i
-                break
-
-        if todo is None:
-            raise NotFound(f"ID {todo_id}のToDoは見つかりません")
+        todo: Todo | None = Todo.query.get(todo_id)
+        if not todo:
+            msg = f"ID {todo_id}のToDoは見つかりません"
+            raise NotFound(msg)
 
         # タイトルが変更され、新しいタイトルが既存のものと重複する場合
-        if "title" in update_data and update_data["title"] != todo["title"]:
-            for t in _todos_db:
-                if t["id"] != todo_id and t["title"] == update_data["title"]:
-                    raise Conflict("同じタイトルのToDoアイテムが既に存在します")
+        if "title" in update_data and update_data["title"] != todo.title:
+            existing = Todo.query.filter(
+                Todo.title == update_data["title"],
+                Todo.id != todo_id,
+            ).first()
+            if existing:
+                msg = "同じタイトルのToDoアイテムが既に存在します"
+                raise Conflict(msg)
 
         # 各フィールドを更新
-        updated_todo = todo.copy()
         for key, value in update_data.items():
-            if key in todo:
-                updated_todo[key] = value
+            if hasattr(todo, key):
+                setattr(todo, key, value)
 
-        updated_todo["updated_at"] = datetime.now().isoformat()
-        _todos_db[todo_index] = updated_todo
-
-        return updated_todo
+        db.session.commit()
+        return todo
 
     @staticmethod
     def delete_todo(todo_id: int) -> None:

@@ -98,3 +98,35 @@ def get_by_id(todo_id: int) -> Response:
     todo_data = todo_schema.dump(todo)
     # レスポンスを返す
     return jsonify(todo_data)
+
+
+@todo_bp.route("/<todo_id>", methods=["PUT"])
+def update(todo_id: int) -> Response:
+    """
+    IDによってToDoアイテムを更新するエンドポイント
+    """
+    # IDのバリデーション
+    query_schema = TodoQuerySchema()
+    validated_params = query_schema.load({"id": todo_id})
+
+    # JSONデータが存在するか確認
+    if not request.is_json:
+        msg = "リクエストボディにJSONデータがありません"
+        raise JSONDecodeError(msg, "", 0)
+
+    # JSONデータを解析
+    json_data = request.get_json(force=True, silent=True)
+    if request.get_data() is not None and json_data is None:
+        msg = "JSONデータの解析に失敗しました"
+        raise JSONDecodeError(msg, "", 0)
+
+    # スキーマを使用してデータをバリデーション
+    todo_schema = TodoSchema()
+    todo_data = todo_schema.load(json_data)
+
+    # ToDoServiceを使用してデータを更新
+    todo = TodoService.update_todo(validated_params.get("id"), todo_data)
+    # スキーマを使用してデータをシリアライズ
+    todo_data = todo_schema.dump(todo)
+    # レスポンスを返す
+    return jsonify(todo_data)

@@ -4,8 +4,9 @@ ToDoアイテムのバリデーションと変換を行うスキーマ定義
 
 import re
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
-from marshmallow import Schema, ValidationError, fields, validate, validates
+from marshmallow import Schema, ValidationError, fields, post_dump, validate, validates
 
 
 class TodoSchema(Schema):
@@ -43,8 +44,32 @@ class TodoSchema(Schema):
         ),
         dump_default="not_started",
     )
-    created_at = fields.DateTime(dump_only=True)  # 読み取り専用
-    updated_at = fields.DateTime(dump_only=True)  # 読み取り専用
+    created_at = fields.NaiveDateTime(
+        timezone=ZoneInfo("Asia/Tokyo"), dump_only=True, format="iso"
+    )  # 読み取り専用
+    updated_at = fields.NaiveDateTime(
+        timezone=ZoneInfo("Asia/Tokyo"), dump_only=True, format="iso"
+    )  # 読み取り専用
+
+    @post_dump
+    def set_timezone(self, data: dict, **kwargs) -> dict:
+        """
+        タイムゾーンを設定する
+
+        data["created_at"]とdata["updated_at"]は既にisoformatの`str`型であるため、
+        一度datetimeに変換してtzinfoを設定してから、再度isoformatに変換する
+        """
+        if "created_at" in data:
+            created_at_obj = datetime.fromisoformat(data["created_at"])
+            data["created_at"] = created_at_obj.replace(
+                tzinfo=ZoneInfo("Asia/Tokyo")
+            ).isoformat()
+        if "updated_at" in data:
+            updated_at_obj = datetime.fromisoformat(data["updated_at"])
+            data["updated_at"] = updated_at_obj.replace(
+                tzinfo=ZoneInfo("Asia/Tokyo")
+            ).isoformat()
+        return data
 
     @validates("due_date")
     def validate_due_date(self, value: str) -> None:

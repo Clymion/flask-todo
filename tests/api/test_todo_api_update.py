@@ -2,9 +2,9 @@
 PUT /todos/{id} エンドポイントのテスト
 """
 
-import pytest
 from flask import json
-from datetime import datetime, timedelta
+
+from tests.conftest import TestClient
 
 
 class TestUpdateTodo:
@@ -67,10 +67,11 @@ class TestUpdateTodo:
         # updated_atが変更されているか確認
         assert data["updated_at"] != original_updated_at
 
-    def test_created_at_not_changed(self, test_client, setup_sample_todos):
+    def test_created_at_not_changed(self, test_client: TestClient, setup_sample_todos):
         """更新時にcreated_atが変更されないことを確認"""
         todo_id = setup_sample_todos[0]["id"]
-        original_created_at = setup_sample_todos[0]["created_at"]
+        original_created_at = setup_sample_todos[0]["created_at"].isoformat()
+        original_updated_at = setup_sample_todos[0]["updated_at"].isoformat()
 
         update_data = {"title": "新しいタイトル"}
 
@@ -80,6 +81,8 @@ class TestUpdateTodo:
         data = json.loads(response.data)
         # created_atは変更されないはず
         assert data["created_at"] == original_created_at
+        # updated_atは変更されるはず
+        assert data["updated_at"] != original_updated_at
 
     def test_update_nonexistent_todo(self, test_client):
         """存在しないIDのToDoの更新に対して404エラーが返されることを確認"""
@@ -94,22 +97,18 @@ class TestUpdateTodo:
         assert data['code'] == 404
         assert 'message' in data
 
-    def test_update_with_invalid_id_format(self, test_client):
+    def test_update_with_invalid_id_format(self, test_client: TestClient):
         """無効なID形式での更新に対して400エラーが返されることを確認"""
         invalid_id = "abc"
 
         update_data = {"title": "無効なIDの更新"}
 
-        response = test_client.client.put(
-            f"/api/v1/todos/{invalid_id}",
-            data=json.dumps(update_data),
-            content_type="application/json",
-        )
+        response = test_client.update_todo(invalid_id, update_data)
         assert response.status_code == 400
 
-        # data = json.loads(response.data)
-        # assert 'errors' in data
-        # assert 'id' in data['errors']
+        data = json.loads(response.data)
+        assert 'errors' in data
+        assert 'id' in data['errors']
 
     def test_update_with_empty_title(self, test_client, setup_sample_todos):
         """空のタイトルでの更新に対して400エラーが返されることを確認"""
@@ -120,9 +119,9 @@ class TestUpdateTodo:
         response = test_client.update_todo(todo_id, update_data)
         assert response.status_code == 400
 
-        # data = json.loads(response.data)
-        # assert 'errors' in data
-        # assert 'title' in data['errors']
+        data = json.loads(response.data)
+        assert 'errors' in data
+        assert 'title' in data['errors']
 
     def test_update_with_title_too_long(self, test_client, setup_sample_todos):
         """タイトルが長すぎる更新に対して400エラーが返されることを確認"""
@@ -133,9 +132,9 @@ class TestUpdateTodo:
         response = test_client.update_todo(todo_id, update_data)
         assert response.status_code == 400
 
-        # data = json.loads(response.data)
-        # assert 'errors' in data
-        # assert 'title' in data['errors']
+        data = json.loads(response.data)
+        assert 'errors' in data
+        assert 'title' in data['errors']
 
     def test_update_with_description_too_long(self, test_client, setup_sample_todos):
         """説明が長すぎる更新に対して400エラーが返されることを確認"""
@@ -146,9 +145,9 @@ class TestUpdateTodo:
         response = test_client.update_todo(todo_id, update_data)
         assert response.status_code == 400
 
-        # data = json.loads(response.data)
-        # assert 'errors' in data
-        # assert 'description' in data['errors']
+        data = json.loads(response.data)
+        assert 'errors' in data
+        assert 'description' in data['errors']
 
     def test_update_with_invalid_priority(self, test_client, setup_sample_todos):
         """無効な優先度での更新に対して400エラーが返されることを確認"""
@@ -159,9 +158,9 @@ class TestUpdateTodo:
         response = test_client.update_todo(todo_id, update_data)
         assert response.status_code == 400
 
-        # data = json.loads(response.data)
-        # assert 'errors' in data
-        # assert 'priority' in data['errors']
+        data = json.loads(response.data)
+        assert 'errors' in data
+        assert 'priority' in data['errors']
 
     def test_update_with_invalid_status(self, test_client, setup_sample_todos):
         """無効なステータスでの更新に対して400エラーが返されることを確認"""
@@ -172,9 +171,9 @@ class TestUpdateTodo:
         response = test_client.update_todo(todo_id, update_data)
         assert response.status_code == 400
 
-        # data = json.loads(response.data)
-        # assert 'errors' in data
-        # assert 'status' in data['errors']
+        data = json.loads(response.data)
+        assert 'errors' in data
+        assert 'status' in data['errors']
 
     def test_update_with_invalid_due_date_format(self, test_client, setup_sample_todos):
         """無効な期限日形式での更新に対して400エラーが返されることを確認"""
@@ -185,9 +184,9 @@ class TestUpdateTodo:
         response = test_client.update_todo(todo_id, update_data)
         assert response.status_code == 400
 
-        # data = json.loads(response.data)
-        # assert 'errors' in data
-        # assert 'due_date' in data['errors']
+        data = json.loads(response.data)
+        assert 'errors' in data
+        assert 'due_date' in data['errors']
 
     def test_update_with_duplicate_title(self, test_client, setup_sample_todos):
         """他のToDoと重複するタイトルでの更新に対して409エラーが返されることを確認"""
@@ -200,9 +199,9 @@ class TestUpdateTodo:
         response = test_client.update_todo(todo_id, update_data)
         assert response.status_code == 409
 
-        # data = json.loads(response.data)
-        # assert data['code'] == 409
-        # assert 'message' in data
+        data = json.loads(response.data)
+        assert data['code'] == 409
+        assert 'message' in data
 
     def test_update_with_same_title(self, test_client, setup_sample_todos):
         """同じToDoの現在のタイトルでの更新が正常に処理されることを確認"""
@@ -239,7 +238,10 @@ class TestUpdateTodo:
         """ちょうど500文字の説明での更新が正常に処理されることを確認"""
         todo_id = setup_sample_todos[0]["id"]
 
-        update_data = {"description": "a" * 500}  # ちょうど500文字
+        update_data = {
+            "title": setup_sample_todos[0]["title"],
+            "description": "a" * 500,   # ちょうど500文字
+        }
 
         response = test_client.update_todo(todo_id, update_data)
         assert response.status_code == 200

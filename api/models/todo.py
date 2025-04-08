@@ -11,8 +11,9 @@ Todoモデル定義
 - updated_at: 更新日時 (自動更新)
 """
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime
 from typing import Optional
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import Date, DateTime, Enum, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -28,7 +29,7 @@ class Todo(db.Model):
     # 共有の時間生成関数
     @staticmethod
     def _get_jst_time() -> datetime:
-        return datetime.now(timezone(timedelta(hours=9)))
+        return datetime.now(tz=ZoneInfo("Asia/Tokyo"))
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     title: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -45,25 +46,16 @@ class Todo(db.Model):
         nullable=False,
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=_get_jst_time,  # staticmethodを参照
+        DateTime(timezone=True),
+        default=_get_jst_time,
         nullable=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=_get_jst_time,  # 同じstaticmethodを参照
-        onupdate=lambda: datetime.now(
-            timezone(timedelta(hours=9)),
-        ),  # 更新時は新しい時間
+        DateTime(timezone=True),
+        default=_get_jst_time,
+        onupdate=lambda: datetime.now(tz=ZoneInfo("Asia/Tokyo")),  # 更新時は新しい時間
         nullable=False,
     )
-
-    def __init__(self, **kwargs) -> None:
-        """コンストラクタで初期値を設定"""
-        now = datetime.now(timezone(timedelta(hours=9)))
-        kwargs["created_at"] = now
-        kwargs["updated_at"] = now
-        super().__init__(**kwargs)
 
     def __repr__(self) -> str:
         """
