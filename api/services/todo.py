@@ -157,19 +157,12 @@ class TodoService:
 
         Raises:
             NotFound: 指定されたIDのToDoが存在しない場合
+
         """
-        # 実際の実装
-        # todo = Todo.query.get(todo_id)
-        # if not todo:
-        #     raise NotFound(f"ID {todo_id}のToDoは見つかりません")
-        #
-        # db.session.delete(todo)
-        # db.session.commit()
+        todo = Todo.query.get(todo_id)
+        if not todo:
+            msg = f"ID {todo_id}のToDoは見つかりません"
+            raise NotFound(msg)
 
-        # 一時的なインメモリ実装
-        for i, todo in enumerate(_todos_db):
-            if todo["id"] == todo_id:
-                _todos_db.pop(i)
-                return
-
-        raise NotFound(f"ID {todo_id}のToDoは見つかりません")
+        db.session.delete(todo)
+        db.session.commit()

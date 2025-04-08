@@ -130,3 +130,18 @@ def update(todo_id: int) -> Response:
     todo_data = todo_schema.dump(todo)
     # レスポンスを返す
     return jsonify(todo_data)
+
+
+@todo_bp.route("/<todo_id>", methods=["DELETE"])
+def delete(todo_id: int) -> Response:
+    """
+    IDによってToDoアイテムを削除するエンドポイント
+    """
+    # IDのバリデーション
+    query_schema = TodoQuerySchema()
+    validated_params = query_schema.load({"id": todo_id})
+
+    # ToDoServiceを使用してデータを削除
+    TodoService.delete_todo(validated_params.get("id"))
+    # レスポンスを返す
+    return "", 204
