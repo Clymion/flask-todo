@@ -1,0 +1,82 @@
+### 変数定義
+@baseUrl = http://localhost:5000/api/v1
+
+### 事前準備: テストデータの作成
+
+### 1. 高優先度の未開始タスク
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "高優先度未開始タスク",
+  "description": "これは高優先度の未開始タスクです",
+  "due_date": "2025-05-15",
+  "priority": "high",
+  "status": "not_started"
+}
+
+### 2. 中優先度の進行中タスク
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "中優先度進行中タスク",
+  "description": "これは中優先度の進行中タスクです",
+  "due_date": "2025-04-20",
+  "priority": "medium",
+  "status": "in_progress"
+}
+
+### 3. 低優先度の完了タスク
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "低優先度完了タスク",
+  "description": "これは低優先度の完了タスクです",
+  "due_date": "2025-04-10",
+  "priority": "low",
+  "status": "completed"
+}
+
+### フィルタリングテスト
+
+### 1. ステータスによるフィルタリング（未開始）
+GET {{baseUrl}}/todos?status=not_started
+Accept: application/json
+
+### 2. ステータスによるフィルタリング（進行中）
+GET {{baseUrl}}/todos?status=in_progress
+Accept: application/json
+
+### 3. ステータスによるフィルタリング（完了）
+GET {{baseUrl}}/todos?status=completed
+Accept: application/json
+
+### 4. 優先度によるフィルタリング（高）
+GET {{baseUrl}}/todos?priority=high
+Accept: application/json
+
+### 5. 優先度によるフィルタリング（中）
+GET {{baseUrl}}/todos?priority=medium
+Accept: application/json
+
+### 6. 優先度によるフィルタリング（低）
+GET {{baseUrl}}/todos?priority=low
+Accept: application/json
+
+### 7. 期限日によるフィルタリング（日付より前）
+GET {{baseUrl}}/todos?due_before=2025-04-30
+Accept: application/json
+
+### 8. 期限日によるフィルタリング（日付より後）
+GET {{baseUrl}}/todos?due_after=2025-04-15
+Accept: application/json
+
+### 9. 複合フィルタリング（高優先度かつ未開始）
+GET {{baseUrl}}/todos?priority=high&status=not_started
+Accept: application/json
+
+### 10. 複合フィルタリング（期限日の範囲指定）
+GET {{baseUrl}}/todos?due_after=2025-04-15&due_before=2025-05-01
+Accept: application/json

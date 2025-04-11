@@ -1,0 +1,45 @@
+### 変数定義
+@baseUrl = http://localhost:5000/api/v1
+@todoId = 1
+
+### 1. すべてのToDoアイテムを取得
+GET {{baseUrl}}/todos
+Accept: application/json
+
+### 2. 新しいToDoを作成
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "OpenAPI仕様書の作成",
+  "description": "ToDo APIのための包括的なOpenAPI仕様を作成する",
+  "due_date": "2025-04-30",
+  "priority": "high",
+  "status": "not_started"
+}
+
+### 3. 作成したToDoを取得
+GET {{baseUrl}}/todos/{{todoId}}
+Accept: application/json
+
+### 4. ToDoを更新
+PUT {{baseUrl}}/todos/{{todoId}}
+Content-Type: application/json
+
+{
+  "title": "OpenAPI仕様書の作成と検証",
+  "description": "ToDo APIのための包括的なOpenAPI仕様を作成し、実装との整合性を検証する",
+  "priority": "high",
+  "status": "in_progress"
+}
+
+### 5. 更新後のToDoを取得
+GET {{baseUrl}}/todos/{{todoId}}
+Accept: application/json
+
+### 6. ToDoを削除
+DELETE {{baseUrl}}/todos/{{todoId}}
+
+### 7. 削除後のToDoが存在しないことを確認
+GET {{baseUrl}}/todos/{{todoId}}
+Accept: application/json

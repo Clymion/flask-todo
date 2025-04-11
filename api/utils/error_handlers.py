@@ -110,5 +110,5 @@ def register_error_handlers(app):
     @app.errorhandler(Exception)
     def handle_generic_exception(e):
         # 本番環境では詳細なエラーメッセージを出力しないほうが良いことに注意
-        # app.logger.error(f"予期しないエラー: {str(e)}")
+        app.logger.error(f"予期しないエラー: {str(e)}")
         return error_response(500, "予期しないエラーが発生しました")

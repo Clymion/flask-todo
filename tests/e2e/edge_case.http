@@ -1,0 +1,124 @@
+### 変数定義
+@baseUrl = http://localhost:5000/api/v1
+
+### 1. 境界値テスト
+
+### 1.1 タイトルがちょうど100文字の場合
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890",
+  "description": "タイトルがちょうど100文字のToDoタスク"
+}
+
+### 1.2 説明がちょうど500文字の場合
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "説明が500文字のタスク",
+  "description": "12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+}
+
+### 1.3 現在日付の期限日
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "今日が期限のタスク",
+  "description": "期限日が現在日付のToDoタスク",
+  "due_date": "2025-04-10"
+}
+
+### 1.4 過去の日付の期限日
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "過去が期限のタスク",
+  "description": "期限日が過去日付のToDoタスク",
+  "due_date": "2025-01-01"
+}
+
+### 1.5 遠い将来の日付の期限日
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "遠い将来が期限のタスク",
+  "description": "期限日が遠い将来のToDoタスク",
+  "due_date": "2030-12-31"
+}
+
+### 1.6 うるう年の2月29日
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "うるう年の日付を持つタスク",
+  "description": "期限日がうるう年の2月29日のToDoタスク",
+  "due_date": "2028-02-29"
+}
+
+### 2. デフォルト値テスト
+
+### 2.1 必須項目のみを指定したToDoの作成
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "必須項目のみのタスク"
+}
+
+### 2.2 作成したToDoを取得してデフォルト値を確認
+GET {{baseUrl}}/todos/1
+Accept: application/json
+
+### 3. NULLの扱いテスト
+
+### 3.1 NULL値を持つToDoの作成
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "NULL値を持つタスク",
+  "description": null,
+  "due_date": null
+}
+
+### 3.2 作成したToDoを取得してNULL値の取り扱いを確認
+GET {{baseUrl}}/todos/1
+Accept: application/json
+
+### 4. 特殊文字を含むタイトルのテスト
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "特殊文字テスト!@#$%^&*()_+{}|:\"<>?-=[]\\;',./",
+  "description": "特殊文字を含むタイトルのToDoタスク"
+}
+
+### 5. 日本語や他の言語文字を含むタイトルのテスト
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "日本語タイトル　テスト　漢字　ひらがな　カタカナ",
+  "description": "日本語文字を含むタイトルのToDoタスク"
+}
+
+### 6. 空白のみのタイトルテスト（バリデーションエラーになるはず）
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "   ",
+  "description": "空白のみのタイトルを持つToDoタスク"
+}
+
+### 7. 大量のToDoアイテムがある場合のテスト
+### 注: このシナリオでは、すでに多数（例えば20件以上）のToDoがある状態でテストする
+GET {{baseUrl}}/todos
+Accept: application/json

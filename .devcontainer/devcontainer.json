@@ -28,11 +28,11 @@
 				"ms-python.debugpy",
 				"hbenl.vscode-test-explorer",
 				"ms-vscode.test-adapter-converter",
-				"rangav.vscode-thunder-client",
 				"Gruntfuggly.todo-tree",
 				"ms-python.black-formatter",
 				"ms-python.isort",
-				"charliermarsh.ruff"
+				"charliermarsh.ruff",
+				"humao.rest-client"
 			]
 		}
 	}

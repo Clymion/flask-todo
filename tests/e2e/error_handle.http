@@ -1,0 +1,94 @@
+### 変数定義
+@baseUrl = http://localhost:5000/api/v1
+
+### 1. 存在しないエンドポイント
+GET {{baseUrl}}/nonexistent
+Accept: application/json
+
+### 2. サポートされていないHTTPメソッド
+PATCH {{baseUrl}}/todos/1
+Content-Type: application/json
+
+{
+  "title": "PATCHメソッドのテスト"
+}
+
+### 4. サポートされていないContent-Typeの使用
+POST {{baseUrl}}/todos
+Content-Type: application/xml
+
+<todo>
+  <title>XMLデータのテスト</title>
+  <description>サポートされていないContent-Type</description>
+</todo>
+
+### 5. 存在しないID関連のエラー
+#### 5.1 存在しないIDのToDoを取得
+GET {{baseUrl}}/todos/9999
+Accept: application/json
+
+#### 5.2 存在しないIDのToDoを更新
+PUT {{baseUrl}}/todos/9999
+Content-Type: application/json
+
+{
+  "title": "存在しないToDoの更新"
+}
+
+#### 5.3 存在しないIDのToDoを削除
+DELETE {{baseUrl}}/todos/9999
+
+### 6. 大きすぎるペイロード
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "大きすぎるペイロード",
+  "description": "非常に大きなデータ",
+  "extraLargeField": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".repeat(10000)
+}
+
+### 7. バリデーションエラーの組み合わせ
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "複数のバリデーションエラー",
+  "description": "複数のフィールドが無効なケース",
+  "priority": "invalid",
+  "status": "wrong",
+  "due_date": "invalid-date"
+}
+
+### 8. 競合エラー（同じタイトルのToDoが存在する場合）
+### 8.1 最初のToDoを作成
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "競合エラーテスト",
+  "description": "競合エラーの確認用"
+}
+
+### 8.2 同じタイトルで2つ目を作成（409 Conflictになるはず）
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "競合エラーテスト",
+  "description": "これは409エラーになるはず"
+}
+
+### 9. デバッグ用 - エラーレスポンスの構造の確認
+### 9.1 明らかに間違ったクエリパラメータ
+GET {{baseUrl}}/todos?invalid_param=value
+Accept: application/json
+
+### 9.2 明らかに間違ったフィールド名
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "無効フィールドテスト",
+  "invalid_field": "これは認識されないフィールド"
+}
