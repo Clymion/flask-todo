@@ -1,0 +1,172 @@
+### 変数定義
+@baseUrl = http://localhost:5000/api/v1
+@createdTodoId = 1
+
+### 統合ワークフローテスト
+### このテストでは完全なユースケースを順番に実行します
+
+### 1. 初期状態：すべてのToDo一覧を取得（空または既存ToDoがある状態を確認）
+GET {{baseUrl}}/todos
+Accept: application/json
+
+### 2. 新しいToDoを作成（ステータス：未開始）
+# @name createTodo
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "APIドキュメントの更新",
+  "description": "OpenAPI仕様書を最新の実装に合わせて更新する",
+  "due_date": "2025-04-30",
+  "priority": "high",
+  "status": "not_started"
+}
+
+### 作成レスポンスからIDを抽出（REST Clientの環境変数機能を使用）
+@createdTodoId = {{createTodo.response.body.id}}
+
+### 3. 作成したToDoを取得して確認
+GET {{baseUrl}}/todos/{{createdTodoId}}
+Accept: application/json
+
+### 4. 特定の条件でToDoをフィルタリング（高優先度のみ）
+GET {{baseUrl}}/todos?priority=high
+Accept: application/json
+
+### 5. 作成したToDoを更新（ステータスを進行中に変更）
+PUT {{baseUrl}}/todos/{{createdTodoId}}
+Content-Type: application/json
+
+{
+  "status": "in_progress",
+  "description": "OpenAPI仕様書を最新の実装に合わせて更新する - 進行中"
+}
+
+### 6. 更新されたToDoを取得して確認
+GET {{baseUrl}}/todos/{{createdTodoId}}
+Accept: application/json
+
+### 7. 再度フィルタリング（進行中のタスクのみ）
+GET {{baseUrl}}/todos?status=in_progress
+Accept: application/json
+
+### 8. もう一度ToDoを更新（完了に変更）
+PUT {{baseUrl}}/todos/{{createdTodoId}}
+Content-Type: application/json
+
+{
+  "status": "completed",
+  "description": "OpenAPI仕様書を最新の実装に合わせて更新する - 完了"
+}
+
+### 9. 更新されたToDoを取得して確認
+GET {{baseUrl}}/todos/{{createdTodoId}}
+Accept: application/json
+
+### 10. 完了したタスクをフィルタリングして確認
+GET {{baseUrl}}/todos?status=completed
+Accept: application/json
+
+### 11. ToDoを削除
+DELETE {{baseUrl}}/todos/{{createdTodoId}}
+
+### 12. 削除後、存在しないことを確認（404が返るはず）
+GET {{baseUrl}}/todos/{{createdTodoId}}
+Accept: application/json
+
+### 13. 最終的なToDo一覧を確認
+GET {{baseUrl}}/todos
+Accept: application/json
+
+### 14. 複数のToDoを追加して複合ワークフローをテスト
+### 14.1 複数タスクの追加
+# @name createTodo1
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "タスク1: データベース設計",
+  "description": "システムのデータベース設計を行う",
+  "due_date": "2025-04-15",
+  "priority": "high",
+  "status": "not_started"
+}
+
+@todo1Id = {{createTodo1.response.body.id}}
+
+# @name createTodo2
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "タスク2: フロントエンド開発",
+  "description": "ユーザーインターフェースの実装",
+  "due_date": "2025-05-01",
+  "priority": "medium",
+  "status": "not_started"
+}
+
+@todo2Id = {{createTodo2.response.body.id}}
+
+# @name createTodo3
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "タスク3: テスト計画作成",
+  "description": "システムテストの計画を立てる",
+  "due_date": "2025-04-20",
+  "priority": "low",
+  "status": "not_started"
+}
+
+@todo3Id = {{createTodo3.response.body.id}}
+
+### 14.2 複合フィルタリングのテスト
+### 未開始のタスクのみ
+GET {{baseUrl}}/todos?status=not_started
+Accept: application/json
+
+### 期限が2025-04-20より前のタスク
+GET {{baseUrl}}/todos?due_before=2025-04-20
+Accept: application/json
+
+### 高優先度かつ未開始のタスク
+GET {{baseUrl}}/todos?priority=high&status=not_started
+Accept: application/json
+
+### 14.3 一部のタスクの状態を更新
+PUT {{baseUrl}}/todos/{{todo1Id}}
+Content-Type: application/json
+
+{
+  "status": "in_progress"
+}
+
+PUT {{baseUrl}}/todos/{{todo3Id}}
+Content-Type: application/json
+
+{
+  "status": "completed"
+}
+
+### 14.4 最終的なフィルタリングと状態確認
+GET {{baseUrl}}/todos
+Accept: application/json
+
+### 特定の優先度のタスク
+GET {{baseUrl}}/todos?priority=medium
+Accept: application/json
+
+### 完了済みのタスク
+GET {{baseUrl}}/todos?status=completed
+Accept: application/json
+
+### 14.5 クリーンアップ（すべてのテストタスクを削除）
+DELETE {{baseUrl}}/todos/{{todo1Id}}
+DELETE {{baseUrl}}/todos/{{todo2Id}}
+DELETE {{baseUrl}}/todos/{{todo3Id}}
+
+### 14.6 最終的なToDo一覧を確認
+GET {{baseUrl}}/todos
+Accept: application/json

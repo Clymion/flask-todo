@@ -1,0 +1,266 @@
+### 変数定義
+@baseUrl = http://localhost:5000/api/v1
+
+### 1. データ準備：多数のToDoを作成
+### (REST Client拡張機能ではループが直接サポートされていないため、手動で複数リクエストを記述)
+
+### ToDo 1
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "パフォーマンステスト用タスク1",
+  "description": "パフォーマンステスト用のデータ",
+  "priority": "low",
+  "status": "not_started"
+}
+
+### ToDo 2
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "パフォーマンステスト用タスク2",
+  "description": "パフォーマンステスト用のデータ",
+  "priority": "medium",
+  "status": "not_started"
+}
+
+### ToDo 3
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "パフォーマンステスト用タスク3",
+  "description": "パフォーマンステスト用のデータ",
+  "priority": "high",
+  "status": "in_progress"
+}
+
+### ToDo 4
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "パフォーマンステスト用タスク4",
+  "description": "パフォーマンステスト用のデータ",
+  "priority": "low",
+  "status": "completed"
+}
+
+### ToDo 5
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "パフォーマンステスト用タスク5",
+  "description": "パフォーマンステスト用のデータ",
+  "priority": "medium",
+  "status": "in_progress"
+}
+
+### ToDo 6
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "パフォーマンステスト用タスク6",
+  "description": "パフォーマンステスト用のデータ",
+  "priority": "high",
+  "status": "not_started"
+}
+
+### ToDo 7
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "パフォーマンステスト用タスク7",
+  "description": "パフォーマンステスト用のデータ",
+  "priority": "low",
+  "status": "not_started"
+}
+
+### ToDo 8
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "パフォーマンステスト用タスク8",
+  "description": "パフォーマンステスト用のデータ",
+  "priority": "medium",
+  "status": "completed"
+}
+
+### ToDo 9
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "パフォーマンステスト用タスク9",
+  "description": "パフォーマンステスト用のデータ",
+  "priority": "high",
+  "status": "completed"
+}
+
+### ToDo 10
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "パフォーマンステスト用タスク10",
+  "description": "パフォーマンステスト用のデータ",
+  "priority": "medium",
+  "status": "in_progress"
+}
+
+### 2. パフォーマンステスト
+
+### 2.1 全ToDoの一覧取得（基本パフォーマンス）
+GET {{baseUrl}}/todos
+Accept: application/json
+
+### 2.2 フィルタリングを使用した一覧取得
+### 2.2.1 ステータスによるフィルタリング
+GET {{baseUrl}}/todos?status=not_started
+Accept: application/json
+
+### 2.2.2 優先度によるフィルタリング
+GET {{baseUrl}}/todos?priority=high
+Accept: application/json
+
+### 2.2.3 複合フィルタリング
+GET {{baseUrl}}/todos?status=in_progress&priority=medium
+Accept: application/json
+
+### 2.3 個別ToDo取得のパフォーマンス
+GET {{baseUrl}}/todos/1
+Accept: application/json
+
+GET {{baseUrl}}/todos/2
+Accept: application/json
+
+GET {{baseUrl}}/todos/3
+Accept: application/json
+
+### 2.4 更新操作のパフォーマンス
+PUT {{baseUrl}}/todos/1
+Content-Type: application/json
+
+{
+  "title": "パフォーマンステスト用タスク1 - 更新",
+  "description": "パフォーマンステスト - 更新後のデータ",
+  "priority": "high",
+  "status": "completed"
+}
+
+### 2.5 連続した操作の実行
+### まず新しいToDoを作成
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "連続操作テスト用タスク",
+  "description": "連続操作のパフォーマンステスト",
+  "priority": "medium",
+  "status": "not_started"
+}
+
+### 作成したToDoを取得（IDは適宜調整）
+GET {{baseUrl}}/todos/11
+Accept: application/json
+
+### 取得したToDoを更新
+PUT {{baseUrl}}/todos/11
+Content-Type: application/json
+
+{
+  "title": "連続操作テスト用タスク - 更新済み",
+  "status": "in_progress"
+}
+
+### 更新後のToDoを取得
+GET {{baseUrl}}/todos/11
+Accept: application/json
+
+### 最後に削除
+DELETE {{baseUrl}}/todos/11
+
+### 3. 一括処理のシミュレーション
+### 3.1 新しいToDoを一括作成
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "一括処理テスト用タスク1",
+  "priority": "low",
+  "status": "not_started"
+}
+
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "一括処理テスト用タスク2",
+  "priority": "medium",
+  "status": "not_started"
+}
+
+POST {{baseUrl}}/todos
+Content-Type: application/json
+
+{
+  "title": "一括処理テスト用タスク3",
+  "priority": "high",
+  "status": "not_started"
+}
+
+### 3.2 続けて検索・フィルタリング
+GET {{baseUrl}}/todos?status=not_started
+Accept: application/json
+
+### 3.3 一括更新
+PUT {{baseUrl}}/todos/12
+Content-Type: application/json
+
+{
+  "status": "in_progress"
+}
+
+PUT {{baseUrl}}/todos/13
+Content-Type: application/json
+
+{
+  "status": "in_progress"
+}
+
+PUT {{baseUrl}}/todos/14
+Content-Type: application/json
+
+{
+  "status": "in_progress"
+}
+
+### 3.4 更新後の一括取得
+GET {{baseUrl}}/todos?status=in_progress
+Accept: application/json
+
+### 4. クリーンアップ - テストデータの削除
+### 注: REST Client ではループが使用できないため、手動で削除リクエストを記述
+DELETE {{baseUrl}}/todos/1
+DELETE {{baseUrl}}/todos/2
+DELETE {{baseUrl}}/todos/3
+DELETE {{baseUrl}}/todos/4
+DELETE {{baseUrl}}/todos/5
+DELETE {{baseUrl}}/todos/6
+DELETE {{baseUrl}}/todos/7
+DELETE {{baseUrl}}/todos/8
+DELETE {{baseUrl}}/todos/9
+DELETE {{baseUrl}}/todos/10
+DELETE {{baseUrl}}/todos/12
+DELETE {{baseUrl}}/todos/13
+DELETE {{baseUrl}}/todos/14
+
+### 5. 最終確認 - すべてのToDoが削除されたことを確認
+GET {{baseUrl}}/todos
+Accept: application/json
