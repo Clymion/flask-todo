@@ -4,7 +4,8 @@ Userに関するビジネスロジックを実装するサービスモジュー�
 
 from typing import Any, Optional
 
-from werkzeug.exceptions import Conflict, NotFound
+from flask_jwt_extended.exceptions import NoAuthorizationError
+from werkzeug.exceptions import Conflict
 
 from api.models.user import User, db
 
@@ -44,3 +45,32 @@ class UserService:
         db.session.commit()
 
         return new_user
+
+    @staticmethod
+    def login_user(user_data: dict[str, Any]) -> Optional[User]:
+        """
+        ユーザーをログインさせる
+
+        Args:
+            user_data: ログイン情報
+
+        Returns:
+            ログインしたユーザー
+
+        """
+        # ユーザー名またはメールアドレスでユーザーを取得
+        user: User | None = User.query.filter(
+            (User.username == user_data["username"])
+            | (User.email == user_data["username"]),
+        ).first()
+
+        if not user:
+            msg = "ユーザー名またはパスワードが不正です"
+            raise NoAuthorizationError(msg)
+
+        # パスワードの確認
+        if not user.check_password(user_data["password"]):
+            msg = "ユーザー名またはパスワードが不正です"
+            raise NoAuthorizationError(msg)
+
+        return user

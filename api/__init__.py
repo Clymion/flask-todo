@@ -8,6 +8,7 @@ from api.routes.todo import todo_bp
 from api.routes.user import user_bp
 from api.utils.database import init_db
 from api.utils.error_handlers import register_error_handlers
+from api.utils.init_jwt import init_jwt
 
 
 def create_app(config=None) -> Flask:
@@ -26,6 +27,8 @@ def create_app(config=None) -> Flask:
 
     if config:
         app.config.update(config)
+
+    app = init_jwt(app)
 
     # Blueprintを登録して、ルーティングを設定
     app.register_blueprint(healthcheck_bp, url_prefix="/")

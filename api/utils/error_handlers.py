@@ -107,6 +107,10 @@ def register_error_handlers(app):
     def handle_http_exception(e):
         return error_response(e.code, e.description or str(e))
 
+    @app.errorhandler(NoAuthorizationError)
+    def handle_no_authorization_error(e):
+        return error_response(401, str(e) or "認証エラー")
+
     @app.errorhandler(Exception)
     def handle_generic_exception(e):
         # 本番環境では詳細なエラーメッセージを出力しないほうが良いことに注意

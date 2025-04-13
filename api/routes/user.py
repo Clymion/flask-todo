@@ -8,9 +8,13 @@ User APIのルートを定義するモジュール
 from json import JSONDecodeError
 from typing import Literal
 
-from flask import Blueprint, Response, jsonify, request
+from flask import Blueprint, Response, current_app, jsonify, request
+from flask_jwt_extended import (
+    create_access_token,
+    jwt_required,
+)
 
-from api.schemas.user import UserRegisterSchema, UserSchema
+from api.schemas.user import UserLoginSchema, UserRegisterSchema, UserSchema
 from api.services.user import UserService
 
 user_bp = Blueprint("user", __name__)
@@ -52,20 +56,34 @@ def login() -> tuple[Response, Literal[200]]:
         return jsonify({"message": "JSONデータが必要です"}), 400
 
     # リクエストボディからJSONデータを取得
-    try:
-        user_data = request.get_json()
-    except JSONDecodeError:
-        return jsonify({"message": "無効なJSONデータです"}), 400
+    user_data = request.get_json(force=True, silent=True)
+    if request.get_data() is not None and user_data is None:
+        msg = "JSONデータの解析に失敗しました"
+        raise JSONDecodeError(msg, "", 0)
 
     # スキーマを使用してデータをバリデーション
-    user_schema = UserSchema()
+    user_schema = UserLoginSchema()
     validated_data = user_schema.load(user_data)
     # ユーザーサービスを使用してユーザーをログイン
-    # user = UserService.login_user(validated_data)
+    user = UserService.login_user(validated_data)
 
     # スキーマを使用してデータをシリアライズ
-    user_data = user_schema.dump(validated_data)
-    return jsonify(user_data), 200
+    user_data = user_schema.dump(user)
+    if user_data is None:
+        return jsonify({"message": "ユーザーが見つかりません"}), 404
+
+    # トークンを生成
+    access_token = create_access_token(identity=user_data["id"])
+    refresh_token = create_access_token(identity=user_data["id"])
+    response = jsonify(
+        {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+            "expires_in": current_app.config["JWT_ACCESS_TOKEN_EXPIRES"],
+        },
+    )
+    return response, 200
 
 
 @user_bp.route("/refresh", methods=["POST"])
@@ -116,6 +134,8 @@ def logout() -> tuple[Response, Literal[200]]:
 
     return jsonify({"message": "ログアウトしました"}), 200
 
+
+@jwt_required()
 @user_bp.route("/profile", methods=["GET"])
 def profile() -> Response:
     """

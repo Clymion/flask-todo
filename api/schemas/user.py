@@ -73,9 +73,9 @@ class AtLeastOneOfUsernameOrEmail:
         :param data: 入力データ
         :raises ValidationError: ユーザー名とメールアドレスの両方が不正な場合
         """
-        if not (data.get("username") or data.get("email")):
+        if not data.get("username") and not data.get("email"):
             msg = "ユーザー名またはメールアドレスのいずれかを指定してください"
-            raise ValidationError(msg, field_name=["username", "email"])
+            raise ValidationError(msg, field_name="username, email")
 
 
 class UserRegisterSchema(UserSchema, AtLeastOneOfUsernameOrEmail):
@@ -112,14 +112,15 @@ class UserRegisterSchema(UserSchema, AtLeastOneOfUsernameOrEmail):
         unknown = "exclude"
 
 
-class UserLoginSchema(Schema, AtLeastOneOfUsernameOrEmail):
+class UserLoginSchema(UserSchema, AtLeastOneOfUsernameOrEmail):
     """
     ユーザーログイン用のスキーマ
 
     ユーザ名またはメールアドレスとパスワードを使用してログインするためのスキーマ
     """
 
-    password = Marshmallow().auto_field(load_only=True)
+    # メールアドレスは任意とする
+    email = fields.Email(required=False)
 
     class Meta:
         """スキーマのメタ情報"""
