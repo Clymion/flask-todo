@@ -33,6 +33,11 @@ components:
           minLength: 3
           maxLength: 50
           description: ユーザー名
+        password:
+          type: string
+          minLength: 8
+          maxLength: 200
+          description: パスワード(DBに保存される際はハッシュ化)
         email:
           type: string
           format: email

@@ -2,16 +2,11 @@
 ToDoアイテムに関するビジネスロジックを実装するサービスモジュール
 """
 
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional
 
-from werkzeug.exceptions import BadRequest, Conflict, NotFound
+from werkzeug.exceptions import Conflict, NotFound
 
 from api.models.todo import Todo, db
-
-# とりあえずメモリ内にデータを保持するようにします
-_todos_db = []  # 開発用の一時的なインメモリストレージ
-_last_id = 0  # IDを採番するためのカウンター
 
 
 class TodoService:
@@ -54,7 +49,7 @@ class TodoService:
         return query.all()
 
     @staticmethod
-    def get_todo_by_id(todo_id: int) -> Dict[str, Any]:
+    def get_todo_by_id(todo_id: int) -> dict[str, Any]:
         """
         IDによってToDoアイテムを取得する
 
@@ -75,7 +70,7 @@ class TodoService:
         return todo
 
     @staticmethod
-    def create_todo(todo_data: Dict[str, Any]) -> Dict[str, Any]:
+    def create_todo(todo_data: dict[str, Any]) -> dict[str, Any]:
         """
         新しいToDoアイテムを作成する
 
@@ -108,7 +103,7 @@ class TodoService:
         return new_todo
 
     @staticmethod
-    def update_todo(todo_id: int, update_data: Dict[str, Any]) -> Dict[str, Any]:
+    def update_todo(todo_id: int, update_data: dict[str, Any]) -> dict[str, Any]:
         """
         既存のToDoアイテムを更新する
 

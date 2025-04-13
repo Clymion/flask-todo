@@ -3,7 +3,9 @@ Flaskアプリケーションのファクトリ関数を定義するモジュー
 
 from flask import Flask
 
+from api.routes.healthcheck import healthcheck_bp
 from api.routes.todo import todo_bp
+from api.routes.user import user_bp
 from api.utils.database import init_db
 from api.utils.error_handlers import register_error_handlers
 
@@ -25,14 +27,17 @@ def create_app(config=None) -> Flask:
     if config:
         app.config.update(config)
 
+    # Blueprintを登録して、ルーティングを設定
+    app.register_blueprint(healthcheck_bp, url_prefix="/")
     app.register_blueprint(todo_bp, url_prefix="/api/v1/todos")
+    app.register_blueprint(user_bp, url_prefix="/api/v1/auth")
+
+    # エラーハンドラーを登録
     register_error_handlers(app)
+
+    # データベースの初期化
     if not app.config.get("TESTING"):
         init_db(app)
-
-    @app.route("/")
-    def index() -> dict[str, str]:
-        return {"index": "Hello World!"}
 
     return app
 

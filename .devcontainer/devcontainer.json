@@ -31,7 +31,8 @@
 				"Gruntfuggly.todo-tree",
 				"ms-python.black-formatter",
 				"charliermarsh.ruff",
-				"humao.rest-client"
+				"humao.rest-client",
+				"tamasfe.even-better-toml"
 			]
 		}
 	}

@@ -1,0 +1,13 @@
+### 変数定義
+@baseUrl = http://localhost:5000/api/v1
+
+### ユーザ登録
+### 1. ユーザ登録
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+    "username": "newuser",
+    "email": "newuser@example.com",
+    "password": "Password123!"
+}
