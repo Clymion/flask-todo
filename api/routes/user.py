@@ -74,8 +74,8 @@ def login() -> tuple[Response, Literal[200]]:
         return jsonify({"message": "ユーザーが見つかりません"}), 404
 
     # トークンを生成
-    access_token = create_access_token(identity=user_data["id"])
-    refresh_token = create_access_token(identity=user_data["id"])
+    access_token = create_access_token(identity=str(user_data["id"]))
+    refresh_token = create_access_token(identity=str(user_data["id"]))
     response = jsonify(
         {
             "access_token": access_token,
