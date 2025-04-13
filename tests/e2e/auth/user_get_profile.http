@@ -1,0 +1,24 @@
+### 変数定義
+@baseUrl = http://localhost:5000/api/v1
+
+### ユーザ情報を取得
+### 1. ログインしてからユーザ情報を取得する
+# @name jwtRequest
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+    "username": "newuser",
+    "password": "Password123!"
+}
+
+### アクセストークンを取得
+### 2. 存在しないユーザでログインする
+// REM: 以下のアクセストークンは`""`で囲まないこと
+@accessToken = {{jwtRequest.response.body.$.access_token}}
+
+GET {{baseUrl}}/auth/profile
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{}

@@ -74,3 +74,17 @@ class UserService:
             raise NoAuthorizationError(msg)
 
         return user
+
+    @staticmethod
+    def get_user_by_id(user_id: int) -> Optional[User]:
+        """
+        ユーザーIDからユーザーを取得する
+
+        Args:
+            user_id: ユーザーID
+
+        Returns:
+            ユーザー情報
+
+        """
+        return User.query.get(user_id)

@@ -9,6 +9,7 @@ from sqlite3 import Error as SQLiteError
 from typing import Any, Dict, Optional, Tuple
 
 from flask import Response, jsonify, request
+from flask_jwt_extended.exceptions import NoAuthorizationError
 from marshmallow import ValidationError
 from werkzeug.exceptions import HTTPException
 

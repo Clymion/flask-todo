@@ -11,6 +11,7 @@ from typing import Literal
 from flask import Blueprint, Response, current_app, jsonify, request
 from flask_jwt_extended import (
     create_access_token,
+    get_jwt_identity,
     jwt_required,
 )
 
@@ -135,15 +136,16 @@ def logout() -> tuple[Response, Literal[200]]:
     return jsonify({"message": "ログアウトしました"}), 200
 
 
-@jwt_required()
 @user_bp.route("/profile", methods=["GET"])
+@jwt_required()
 def profile() -> Response:
     """
     ユーザープロフィールを取得するエンドポイント
     """
     # ユーザー情報を取得
-    # user = UserService.get_user_profile()
+    current_user_id: int = get_jwt_identity()
+    user = UserService.get_user_by_id(current_user_id)
     # スキーマを使用してデータをシリアライズ
     user_schema = UserSchema()
-    # user_data = user_schema.dump(user)
-    return jsonify(user_schema)
+    user_data = user_schema.dump(user)
+    return jsonify(user_data), 200
