@@ -108,7 +108,8 @@ def get_by_id(todo_id: int) -> Response:
     validated_params = query_schema.load(params)
     # ToDoServiceを使用してデータを取得
     todo = TodoService.get_todo_by_id(
-        todo_id=validated_params.get("id"), user_id=validated_params.get("user_id"),
+        todo_id=validated_params.get("id"),
+        user_id=validated_params.get("user_id"),
     )
     # スキーマを使用してデータをシリアライズ
     todo_schema = TodoSchema()
@@ -118,13 +119,19 @@ def get_by_id(todo_id: int) -> Response:
 
 
 @todo_bp.route("/<todo_id>", methods=["PUT"])
+@jwt_required()
 def update(todo_id: int) -> Response:
     """
     IDによってToDoアイテムを更新するエンドポイント
     """
     # IDのバリデーション
+    user_id = get_jwt_identity()
+    params = {
+        "id": todo_id,
+        "user_id": user_id,
+    }
     query_schema = TodoQuerySchema()
-    validated_params = query_schema.load({"id": todo_id})
+    validated_params = query_schema.load(params)
 
     # JSONデータが存在するか確認
     if not request.is_json:
@@ -136,13 +143,17 @@ def update(todo_id: int) -> Response:
     if request.get_data() is not None and json_data is None:
         msg = "JSONデータの解析に失敗しました"
         raise JSONDecodeError(msg, "", 0)
+    if "user_id" not in json_data:
+        json_data["user_id"] = user_id
 
     # スキーマを使用してデータをバリデーション
     todo_schema = TodoSchema()
     todo_data = todo_schema.load(json_data)
 
     # ToDoServiceを使用してデータを更新
-    todo = TodoService.update_todo(validated_params.get("id"), todo_data)
+    todo = TodoService.update_todo(
+        validated_params.get("id"), validated_params.get("user_id"), todo_data,
+    )
     # スキーマを使用してデータをシリアライズ
     todo_data = todo_schema.dump(todo)
     # レスポンスを返す
@@ -150,15 +161,21 @@ def update(todo_id: int) -> Response:
 
 
 @todo_bp.route("/<todo_id>", methods=["DELETE"])
+@jwt_required()
 def delete(todo_id: int) -> Response:
     """
     IDによってToDoアイテムを削除するエンドポイント
     """
     # IDのバリデーション
+    user_id = get_jwt_identity()
+    params = {
+        "id": todo_id,
+        "user_id": user_id,
+    }
     query_schema = TodoQuerySchema()
-    validated_params = query_schema.load({"id": todo_id})
+    validated_params = query_schema.load(params)
 
     # ToDoServiceを使用してデータを削除
-    TodoService.delete_todo(validated_params.get("id"))
+    TodoService.delete_todo(validated_params.get("id"), validated_params.get("user_id"))
     # レスポンスを返す
     return "", 204

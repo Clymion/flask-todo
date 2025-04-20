@@ -109,12 +109,17 @@ class TodoService:
         return new_todo
 
     @staticmethod
-    def update_todo(todo_id: int, update_data: dict[str, Any]) -> dict[str, Any]:
+    def update_todo(
+        todo_id: int,
+        user_id: int,
+        update_data: dict[str, Any],
+    ) -> dict[str, Any]:
         """
         既存のToDoアイテムを更新する
 
         Args:
             todo_id: 更新するToDoのID
+            user_id: ユーザーID
             update_data: 更新データ
 
         Returns:
@@ -125,7 +130,7 @@ class TodoService:
             Conflict: 更新後のタイトルが他のToDoと重複する場合
 
         """
-        todo: Todo | None = Todo.query.get(todo_id)
+        todo: Todo | None = Todo.query.filter_by(id=todo_id, user_id=user_id).first()
         if not todo:
             msg = f"ID {todo_id}のToDoは見つかりません"
             raise NotFound(msg)
@@ -149,18 +154,19 @@ class TodoService:
         return todo
 
     @staticmethod
-    def delete_todo(todo_id: int) -> None:
+    def delete_todo(todo_id: int, user_id: int) -> None:
         """
         ToDoアイテムを削除する
 
         Args:
             todo_id: 削除するToDoのID
+            user_id: ユーザーID
 
         Raises:
             NotFound: 指定されたIDのToDoが存在しない場合
 
         """
-        todo = Todo.query.get(todo_id)
+        todo = Todo.query.filter_by(id=todo_id, user_id=user_id).first()
         if not todo:
             msg = f"ID {todo_id}のToDoは見つかりません"
             raise NotFound(msg)
