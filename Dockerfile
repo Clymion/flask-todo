@@ -1,8 +1,8 @@
-FROM python:3.11-slim
+FROM python:3.11-bullseye
 
-# gitのインストールと必要なツールのセットアップ
+# gitとRedisサーバーのインストール
 RUN apt-get update && \
-    apt-get install -y git && \
+    apt-get install -y git redis-server && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -18,8 +18,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 # アプリケーションコードをコピー
 COPY . .
 
+# 起動スクリプト
+RUN chmod +x entrypoint.sh
+
 # Flaskアプリが使用するポートを公開
 EXPOSE 5000
+# Redisが使用するポートを公開
+EXPOSE 6379
 
 # 開発サーバー起動コマンド
-CMD ["flask", "--app", "api", "run", "--host=0.0.0.0"]
+CMD ["./entrypoint.sh"]

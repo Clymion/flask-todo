@@ -383,12 +383,12 @@ class TestClient:
     def refresh_token(
         self,
         refresh_token: str,
-        headers: Optional[dict[str, str]] = None,
+        headers: Optional[dict[str, str]] = {},
     ) -> TestResponse:
-        """トークン更新"""
+        """トークン更新: リフレッシュトークンをヘッダーに含める"""
+        headers["Authorization"] = f"Bearer {refresh_token}"
         return self.client.post(
             f"{self.base_url}/auth/refresh",
-            data=json.dumps({"refresh_token": refresh_token}),
             content_type="application/json",
             headers=headers,
         )
