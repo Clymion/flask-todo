@@ -2,11 +2,13 @@
 テスト用の共通フィクスチャとヘルパー関数を提供するモジュール
 """
 
+from __future__ import annotations
+
 import os
 import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -60,14 +62,13 @@ def client(app: Flask):
     return app.test_client()
 
 
-# ユーザー関連のフィクスチャ
 @pytest.fixture
 def test_user_data() -> dict[str, str]:
     """テスト用のユーザーデータを提供するフィクスチャ"""
     return {
         "username": "testuser",
         "email": "test@example.com",
-        "password": "Password123!",
+        "password": "securepassword123",
     }
 
 
@@ -75,6 +76,12 @@ def test_user_data() -> dict[str, str]:
 def test_user(app: Flask, test_user_data: dict[str, str]) -> dict[str, Any]:
     """テストユーザーを作成し、そのユーザー情報を返すフィクスチャ"""
     with app.app_context():
+        # 既存のユーザーがある場合は削除
+        User.query.filter_by(username=test_user_data["username"]).delete()
+        User.query.filter_by(email=test_user_data["email"]).delete()
+        db.session.commit()
+
+        # テストユーザーを作成
         user = User(
             username=test_user_data["username"],
             email=test_user_data["email"],
@@ -106,7 +113,7 @@ def test_users(app: Flask) -> list[dict[str, Any]]:
             user = User(
                 username=user_data["username"],
                 email=user_data["email"],
-                password_hash=generate_password_hash(user_data["password"]),
+                password=user_data["password"],
             )
             db.session.add(user)
             db.session.flush()
@@ -148,6 +155,28 @@ def auth_tokens(client: FlaskClient, test_user: dict[str, Any]) -> dict[str, str
 def auth_header(auth_tokens: dict[str, str]) -> dict[str, str]:
     """認証ヘッダーを提供するフィクスチャ"""
     return {"Authorization": f"Bearer {auth_tokens['access_token']}"}
+
+
+@pytest.fixture
+def auth_token(client: FlaskClient, test_user: dict) -> str:
+    """認証トークンを取得するフィクスチャ"""
+    login_data = {
+        "username": test_user["username"],
+        "password": test_user["password"],
+    }
+    response = client.post(
+        "/api/v1/auth/login",
+        data=json.dumps(login_data),
+        content_type="application/json",
+    )
+    data = json.loads(response.data)
+    return data["access_token"]
+
+
+@pytest.fixture
+def auth_headers(auth_token: str) -> dict:
+    """認証ヘッダーを提供するフィクスチャ"""
+    return {"Authorization": f"Bearer {auth_token}"}
 
 
 @pytest.fixture
@@ -237,8 +266,6 @@ def setup_sample_todos(
 ):
     """
     テスト用のデータベースにサンプルToDoを登録するフィクスチャ
-
-    認証機能を考慮して、ToDoに所有者(ユーザーID)を関連付ける
     """
     with app.app_context():
         for todo_data in sample_todos:
@@ -300,7 +327,6 @@ class TestClient:
     テスト用のHTTPクライアントユーティリティクラス
 
     APIリクエストを簡単に行うためのヘルパーメソッドを提供
-    認証機能に対応するよう拡張
     """
 
     def __init__(self, client: FlaskClient) -> None:
@@ -310,42 +336,34 @@ class TestClient:
 
     def get_todos(
         self,
-        query_params: Optional[dict[str, str]] = None,
-        headers: Optional[dict[str, str]] = None,
+        query_params: dict[str, str] | None = None,
+        headers: dict | None = None,
     ) -> TestResponse:
         """全ToDoリストを取得"""
-        url = f"{self.base_url}/todos"
+        url = f"{self.base_url}/todos/"
         if query_params:
             query_string = "&".join([f"{k}={v}" for k, v in query_params.items()])
             url = f"{url}?{query_string}"
         return self.client.get(url, headers=headers)
 
-    def create_todo(
-        self,
-        todo_data: dict[str, Any],
-        headers: Optional[dict[str, str]] = None,
-    ) -> TestResponse:
+    def create_todo(self, todo_data: dict, headers: dict | None = None) -> TestResponse:
         """新規ToDoを作成"""
         return self.client.post(
-            f"{self.base_url}/todos",
+            f"{self.base_url}/todos/",
             data=json.dumps(todo_data),
             content_type="application/json",
             headers=headers,
         )
 
-    def get_todo_by_id(
-        self,
-        todo_id: Union[int, str],
-        headers: Optional[dict[str, str]] = None,
-    ) -> TestResponse:
+    def get_todo_by_id(self, todo_id: int, headers: dict | None = None) -> TestResponse:
         """IDによるToDo取得"""
         return self.client.get(f"{self.base_url}/todos/{todo_id}", headers=headers)
 
     def update_todo(
         self,
-        todo_id: Union[int, str],
-        update_data: dict[str, Any],
-        headers: Optional[dict[str, str]] = None,
+        todo_id: int,
+        update_data: dict,
+        headers: dict | None = None,
     ) -> TestResponse:
         """ToDoを更新"""
         return self.client.put(
@@ -355,11 +373,7 @@ class TestClient:
             headers=headers,
         )
 
-    def delete_todo(
-        self,
-        todo_id: Union[int, str],
-        headers: Optional[dict[str, str]] = None,
-    ) -> TestResponse:
+    def delete_todo(self, todo_id: int, headers: dict | None = None) -> TestResponse:
         """ToDoを削除"""
         return self.client.delete(f"{self.base_url}/todos/{todo_id}", headers=headers)
 
@@ -383,7 +397,7 @@ class TestClient:
     def refresh_token(
         self,
         refresh_token: str,
-        headers: Optional[dict[str, str]] = {},
+        headers: dict[str, str] | None = {},
     ) -> TestResponse:
         """トークン更新: リフレッシュトークンをヘッダーに含める"""
         headers["Authorization"] = f"Bearer {refresh_token}"

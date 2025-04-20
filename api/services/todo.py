@@ -20,6 +20,7 @@ class TodoService:
         priority: Optional[str] = None,
         due_before: Optional[str] = None,
         due_after: Optional[str] = None,
+        user_id: Optional[int] = None,
     ) -> list[Todo]:
         """
         全ToDoアイテムを取得し、オプションでフィルタリングする
@@ -29,6 +30,7 @@ class TodoService:
             priority: 優先度でフィルタリング (オプション)
             due_before: 指定日より前の期限でフィルタリング (オプション)
             due_after: 指定日より後の期限でフィルタリング (オプション)
+            user_id: ユーザーIDでフィルタリング (オプション)
 
         Returns:
             フィルタリングされたToDoアイテムのリスト
@@ -45,16 +47,19 @@ class TodoService:
             query = query.filter(Todo.due_date <= due_before)
         if due_after:
             query = query.filter(Todo.due_date >= due_after)
+        if user_id:
+            query = query.filter(Todo.user_id == user_id)
 
         return query.all()
 
     @staticmethod
-    def get_todo_by_id(todo_id: int) -> dict[str, Any]:
+    def get_todo_by_id(todo_id: int, user_id: int) -> dict[str, Any]:
         """
         IDによってToDoアイテムを取得する
 
         Args:
             todo_id: ToDoアイテムのID
+            user_id: ユーザーID
 
         Returns:
             ToDoアイテム
@@ -63,7 +68,7 @@ class TodoService:
             NotFound: 指定されたIDのToDoが存在しない場合
 
         """
-        todo = Todo.query.get(todo_id)
+        todo = Todo.query.filter_by(id=todo_id, user_id=user_id).first()
         if not todo:
             msg = f"ID {todo_id}のToDoは見つかりません"
             raise NotFound(msg)
@@ -85,7 +90,7 @@ class TodoService:
 
         """
         # タイトルの重複チェック
-        todos = TodoService.get_all_todos()
+        todos = TodoService.get_all_todos(user_id=todo_data["user_id"])
         existing_titles = [todo.title for todo in todos]
         if todo_data["title"] in existing_titles:
             msg = "同じタイトルのToDoアイテムが既に存在します"
@@ -97,6 +102,7 @@ class TodoService:
             due_date=todo_data.get("due_date"),
             priority=todo_data.get("priority", "medium"),
             status=todo_data.get("status", "not_started"),
+            user_id=todo_data["user_id"],
         )
         db.session.add(new_todo)
         db.session.commit()
