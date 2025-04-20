@@ -1,0 +1,32 @@
+# Version control
+.git
+.gitignore
+
+# Development environments
+.vscode
+.devcontainer
+.env.*
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+# Testing
+tests/
+.pytest_cache/
+coverage/
+
+# Data directories
+data/*.db
+data/*.non-auth.*
+
+# Documentation
+docs/
+
+# Local development files
+compose.yml
+ruff.toml
+
+# Miscellaneous
+*.log
+.DS_Store

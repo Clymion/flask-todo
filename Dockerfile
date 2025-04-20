@@ -21,8 +21,6 @@ COPY . .
 # 起動スクリプト
 RUN chmod +x entrypoint.sh
 
-# Flaskアプリが使用するポートを公開
-EXPOSE 5000
 # Redisが使用するポートを公開
 EXPOSE 6379
 
