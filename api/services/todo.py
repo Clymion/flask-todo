@@ -2,16 +2,11 @@
 ToDoアイテムに関するビジネスロジックを実装するサービスモジュール
 """
 
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional
 
-from werkzeug.exceptions import BadRequest, Conflict, NotFound
+from werkzeug.exceptions import Conflict, NotFound
 
 from api.models.todo import Todo, db
-
-# とりあえずメモリ内にデータを保持するようにします
-_todos_db = []  # 開発用の一時的なインメモリストレージ
-_last_id = 0  # IDを採番するためのカウンター
 
 
 class TodoService:
@@ -25,6 +20,7 @@ class TodoService:
         priority: Optional[str] = None,
         due_before: Optional[str] = None,
         due_after: Optional[str] = None,
+        user_id: Optional[int] = None,
     ) -> list[Todo]:
         """
         全ToDoアイテムを取得し、オプションでフィルタリングする
@@ -34,6 +30,7 @@ class TodoService:
             priority: 優先度でフィルタリング (オプション)
             due_before: 指定日より前の期限でフィルタリング (オプション)
             due_after: 指定日より後の期限でフィルタリング (オプション)
+            user_id: ユーザーIDでフィルタリング (オプション)
 
         Returns:
             フィルタリングされたToDoアイテムのリスト
@@ -50,16 +47,19 @@ class TodoService:
             query = query.filter(Todo.due_date <= due_before)
         if due_after:
             query = query.filter(Todo.due_date >= due_after)
+        if user_id:
+            query = query.filter(Todo.user_id == user_id)
 
         return query.all()
 
     @staticmethod
-    def get_todo_by_id(todo_id: int) -> Dict[str, Any]:
+    def get_todo_by_id(todo_id: int, user_id: int) -> dict[str, Any]:
         """
         IDによってToDoアイテムを取得する
 
         Args:
             todo_id: ToDoアイテムのID
+            user_id: ユーザーID
 
         Returns:
             ToDoアイテム
@@ -68,14 +68,14 @@ class TodoService:
             NotFound: 指定されたIDのToDoが存在しない場合
 
         """
-        todo = Todo.query.get(todo_id)
+        todo = Todo.query.filter_by(id=todo_id, user_id=user_id).first()
         if not todo:
             msg = f"ID {todo_id}のToDoは見つかりません"
             raise NotFound(msg)
         return todo
 
     @staticmethod
-    def create_todo(todo_data: Dict[str, Any]) -> Dict[str, Any]:
+    def create_todo(todo_data: dict[str, Any]) -> dict[str, Any]:
         """
         新しいToDoアイテムを作成する
 
@@ -90,7 +90,7 @@ class TodoService:
 
         """
         # タイトルの重複チェック
-        todos = TodoService.get_all_todos()
+        todos = TodoService.get_all_todos(user_id=todo_data["user_id"])
         existing_titles = [todo.title for todo in todos]
         if todo_data["title"] in existing_titles:
             msg = "同じタイトルのToDoアイテムが既に存在します"
@@ -102,18 +102,24 @@ class TodoService:
             due_date=todo_data.get("due_date"),
             priority=todo_data.get("priority", "medium"),
             status=todo_data.get("status", "not_started"),
+            user_id=todo_data["user_id"],
         )
         db.session.add(new_todo)
         db.session.commit()
         return new_todo
 
     @staticmethod
-    def update_todo(todo_id: int, update_data: Dict[str, Any]) -> Dict[str, Any]:
+    def update_todo(
+        todo_id: int,
+        user_id: int,
+        update_data: dict[str, Any],
+    ) -> dict[str, Any]:
         """
         既存のToDoアイテムを更新する
 
         Args:
             todo_id: 更新するToDoのID
+            user_id: ユーザーID
             update_data: 更新データ
 
         Returns:
@@ -124,7 +130,7 @@ class TodoService:
             Conflict: 更新後のタイトルが他のToDoと重複する場合
 
         """
-        todo: Todo | None = Todo.query.get(todo_id)
+        todo: Todo | None = Todo.query.filter_by(id=todo_id, user_id=user_id).first()
         if not todo:
             msg = f"ID {todo_id}のToDoは見つかりません"
             raise NotFound(msg)
@@ -148,18 +154,19 @@ class TodoService:
         return todo
 
     @staticmethod
-    def delete_todo(todo_id: int) -> None:
+    def delete_todo(todo_id: int, user_id: int) -> None:
         """
         ToDoアイテムを削除する
 
         Args:
             todo_id: 削除するToDoのID
+            user_id: ユーザーID
 
         Raises:
             NotFound: 指定されたIDのToDoが存在しない場合
 
         """
-        todo = Todo.query.get(todo_id)
+        todo = Todo.query.filter_by(id=todo_id, user_id=user_id).first()
         if not todo:
             msg = f"ID {todo_id}のToDoは見つかりません"
             raise NotFound(msg)

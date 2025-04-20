@@ -44,6 +44,13 @@ class TodoSchema(Schema):
         ),
         dump_default="not_started",
     )
+    user_id = fields.Integer(
+        validate=validate.Range(
+            min=1,
+            error="ユーザーIDは1以上の整数である必要があります",
+        ),
+        required=True,
+    )
     created_at = fields.NaiveDateTime(
         timezone=ZoneInfo("Asia/Tokyo"), dump_only=True, format="iso"
     )  # 読み取り専用
@@ -153,6 +160,14 @@ class TodoQuerySchema(Schema):
     )
     due_before = fields.Date(format="%Y-%m-%d", required=False, allow_none=True)
     due_after = fields.Date(format="%Y-%m-%d", required=False, allow_none=True)
+    user_id = fields.Integer(
+        validate=validate.Range(
+            min=1,
+            error="ユーザーIDは1以上の整数である必要があります",
+        ),
+        required=False,
+        allow_none=True,
+    )
 
     @validates("due_before")
     def validate_due_before(self, value: str) -> None:

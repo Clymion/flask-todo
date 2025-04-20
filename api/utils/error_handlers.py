@@ -9,6 +9,7 @@ from sqlite3 import Error as SQLiteError
 from typing import Any, Dict, Optional, Tuple
 
 from flask import Response, jsonify, request
+from flask_jwt_extended.exceptions import NoAuthorizationError
 from marshmallow import ValidationError
 from werkzeug.exceptions import HTTPException
 
@@ -106,6 +107,10 @@ def register_error_handlers(app):
     @app.errorhandler(HTTPException)
     def handle_http_exception(e):
         return error_response(e.code, e.description or str(e))
+
+    @app.errorhandler(NoAuthorizationError)
+    def handle_no_authorization_error(e):
+        return error_response(401, str(e) or "認証エラー")
 
     @app.errorhandler(Exception)
     def handle_generic_exception(e):

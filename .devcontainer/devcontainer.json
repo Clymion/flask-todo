@@ -30,9 +30,9 @@
 				"ms-vscode.test-adapter-converter",
 				"Gruntfuggly.todo-tree",
 				"ms-python.black-formatter",
-				"ms-python.isort",
 				"charliermarsh.ruff",
-				"humao.rest-client"
+				"humao.rest-client",
+				"tamasfe.even-better-toml"
 			]
 		}
 	}

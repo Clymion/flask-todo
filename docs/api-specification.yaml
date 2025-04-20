@@ -1,14 +1,127 @@
 openapi: 3.0.0
 info:
   title: ToDo API
-  description: FlaskとSQLiteを使用したToDoアプリのRESTful API
+  description: FlaskとSQLiteを使用したToDoアプリのRESTful API（JWT認証機能付き）
   version: 1.0.0
 servers:
   - url: http://localhost:5000/api/v1
     description: 開発サーバー
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWTトークンを使用した認証。'Authorization'ヘッダーに'Bearer {token}'形式で指定してください。
+
   schemas:
+    # ユーザー関連のスキーマ
+    User:
+      type: object
+      required:
+        - username
+        - email
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+          description: ユーザーの一意の識別子
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+          description: ユーザー名
+        password:
+          type: string
+          minLength: 8
+          maxLength: 200
+          description: パスワード(DBに保存される際はハッシュ化)
+        email:
+          type: string
+          format: email
+          description: ユーザーのメールアドレス
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: ユーザーが作成されたタイムスタンプ
+      example:
+        id: 1
+        username: "testuser"
+        email: "test@example.com"
+        created_at: "2025-04-04T12:00:00Z"
+    
+    UserRegister:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+          description: ユーザー名
+        email:
+          type: string
+          format: email
+          description: ユーザーのメールアドレス
+        password:
+          type: string
+          format: password
+          minLength: 8
+          description: パスワード（8文字以上）
+      example:
+        username: "newuser"
+        email: "newuser@example.com"
+        password: "securepassword123"
+    
+    UserLogin:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          description: ユーザー名またはメールアドレス
+        password:
+          type: string
+          format: password
+          description: パスワード
+      example:
+        username: "testuser"
+        password: "securepassword123"
+    
+    TokenResponse:
+      type: object
+      required:
+        - access_token
+        - refresh_token
+      properties:
+        access_token:
+          type: string
+          description: JWTアクセストークン
+        refresh_token:
+          type: string
+          description: JWTリフレッシュトークン
+        token_type:
+          type: string
+          default: "bearer"
+          description: トークンタイプ
+        expires_in:
+          type: integer
+          description: アクセストークンの有効期間（秒）
+      example:
+        access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        token_type: "bearer"
+        expires_in: 3600
+    
+    # ToDo関連のスキーマ（既存）
     Todo:
       type: object
       required:
@@ -54,6 +167,11 @@ components:
           format: date-time
           readOnly: true
           description: ToDoアイテムが最後に更新されたタイムスタンプ
+        user_id:
+          type: integer
+          format: int64
+          readOnly: true
+          description: ToDoアイテムの所有者ID
       example:
         id: 1
         title: "OpenAPI仕様書の作成"
@@ -63,6 +181,7 @@ components:
         status: "in_progress"
         created_at: "2025-04-04T12:00:00Z"
         updated_at: "2025-04-04T12:00:00Z"
+        user_id: 1
     
     Error:
       type: object
@@ -129,6 +248,23 @@ components:
         code: 500
         message: "データベースエラーが発生しました"
         error_type: "接続に失敗しました"
+    
+    AuthError:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: HTTPステータスコード
+        message:
+          type: string
+          description: エラーメッセージ
+      example:
+        code: 401
+        message: "認証に失敗しました"
   
   responses:
     NotFound:
@@ -186,6 +322,46 @@ components:
               value:
                 code: 409
                 message: "同じタイトルのToDoアイテムが既に存在します"
+            DuplicateUsername:
+              value:
+                code: 409
+                message: "このユーザー名は既に使用されています"
+            DuplicateEmail:
+              value:
+                code: 409
+                message: "このメールアドレスは既に使用されています"
+    
+    Unauthorized:
+      description: 認証情報が不足しているか無効です
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AuthError'
+          examples:
+            MissingToken:
+              value:
+                code: 401
+                message: "認証トークンがありません"
+            InvalidToken:
+              value:
+                code: 401
+                message: "無効な認証トークンです"
+            ExpiredToken:
+              value:
+                code: 401
+                message: "認証トークンの有効期限が切れています"
+    
+    Forbidden:
+      description: 要求されたリソースへのアクセスが禁止されています
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            NotOwner:
+              value:
+                code: 403
+                message: "このリソースにアクセスする権限がありません"
     
     InternalError:
       description: 内部サーバーエラー
@@ -204,10 +380,141 @@ components:
                 message: "予期しないエラーが発生しました"
 
 paths:
+  # 認証関連のエンドポイント
+  /auth/register:
+    post:
+      summary: 新規ユーザー登録
+      description: 新しいユーザーアカウントを作成します
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegister'
+      responses:
+        '201':
+          description: ユーザーが正常に登録されました
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  
+  /auth/login:
+    post:
+      summary: ユーザーログイン
+      description: ユーザー認証を行い、JWTトークンを発行します
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: ログインに成功しました
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: 認証に失敗しました
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+              example:
+                code: 401
+                message: "ユーザー名またはパスワードが正しくありません"
+        '500':
+          $ref: '#/components/responses/InternalError'
+  
+  /auth/refresh:
+    post:
+      summary: トークンの更新
+      description: リフレッシュトークンを使用して新しいアクセストークンを取得します
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refresh_token
+              properties:
+                refresh_token:
+                  type: string
+                  description: リフレッシュトークン
+      responses:
+        '200':
+          description: トークンの更新に成功しました
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  
+  /auth/logout:
+    post:
+      summary: ユーザーログアウト
+      description: 現在のセッションからログアウトし、トークンを無効化します
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: ログアウトに成功しました
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "ログアウトに成功しました"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  
+  /auth/profile:
+    get:
+      summary: ユーザープロファイル取得
+      description: 現在認証されているユーザーのプロファイル情報を取得します
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: ユーザープロファイル
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  
+  # ToDo関連のエンドポイント（認証要件を追加）
   /todos:
     get:
       summary: すべてのToDoアイテムを取得
-      description: すべてのToDoアイテムのリストを返します
+      description: 現在のユーザーのすべてのToDoアイテムのリストを返します
+      security:
+        - bearerAuth: []
       parameters:
         - name: status
           in: query
@@ -265,12 +572,16 @@ paths:
                     message: "バリデーションエラー"
                     errors:
                       due_before: "無効な日付形式です。期待される形式: YYYY-MM-DD"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalError'
     
     post:
       summary: 新しいToDoアイテムを作成
-      description: 提供されたデータで新しいToDoアイテムを作成します
+      description: 提供されたデータで現在のユーザーの新しいToDoアイテムを作成します
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -312,6 +623,8 @@ paths:
                 $ref: '#/components/schemas/Todo'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '409':
           $ref: '#/components/responses/Conflict'
         '500':
@@ -331,6 +644,8 @@ paths:
     get:
       summary: 特定のToDoアイテムを取得
       description: IDによって特定のToDoアイテムを返します
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: ToDoアイテム
@@ -349,6 +664,10 @@ paths:
                 message: "バリデーションエラー"
                 errors:
                   id: "IDは正の整数である必要があります"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -357,6 +676,8 @@ paths:
     put:
       summary: ToDoアイテムを更新
       description: 提供されたデータでToDoアイテムを更新します
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -396,6 +717,10 @@ paths:
                 $ref: '#/components/schemas/Todo'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
@@ -406,6 +731,8 @@ paths:
     delete:
       summary: ToDoアイテムを削除
       description: IDによってToDoアイテムを削除します
+      security:
+        - bearerAuth: []
       responses:
         '204':
           description: ToDoが正常に削除されました
@@ -420,6 +747,10 @@ paths:
                 message: "バリデーションエラー"
                 errors:
                   id: "IDは正の整数である必要があります"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
